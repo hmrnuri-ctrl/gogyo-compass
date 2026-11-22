@@ -224,6 +224,8 @@ button.barbtn:hover{background:var(--sf2)}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
 .frame{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--sf)}
 .frame iframe{width:100%;height:78vh;min-height:520px;border:0;display:block;background:#fff}
+.dev{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--sf);border:1.5px dashed var(--brand);color:var(--ink);border-radius:999px;padding:8px 16px;font-size:14px;text-align:center;box-shadow:var(--sh)}
+.dev .star{color:var(--acc);font-size:16px}
 footer{padding-block:10px 40px;color:var(--mut);font-size:13px}
 @media (max-width:560px){.brand span{display:none}.kv{grid-template-columns:1fr}.tl li{grid-template-columns:1fr;gap:2px}.panel{padding:16px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -241,6 +243,7 @@ footer{padding-block:10px 40px;color:var(--mut);font-size:13px}
 <div class="wrap"><main id="app"></main>
 <footer>
   <p class="noprint"><a href="#admin">관리자</a></p>
+  <p>개발 · 나로와서당 별숲지기 시소샘</p>
   <p>이 앱은 중학생의 고등학교 선택을 돕는 참고 자료입니다. 전형 방법, 일정, 학교 지정·운영 현황은 해마다 바뀌고 정책에 따라 달라질 수 있어요. 최종 내용은 반드시 학교 홈페이지와 시도교육청 모집요강에서 확인하세요. 직업계고 학과 정보는 HIFIVE 학교별 학과정보 자료를 바탕으로 학과 이름을 분야별로 묶은 것이에요. 대학 학과·취업률 정보는 커리어넷 학과정보와 대학 졸업자 취업통계(2024~2025년) 자료를 바탕으로 했어요. (2026년 11월 기준으로 정리)</p>
 </footer></div>
 
@@ -564,13 +567,13 @@ let KEY=KB;
 const MEM={};
 const ls={get(k){try{const v=localStorage.getItem(k);if(v)return JSON.parse(v)}catch(e){}return MEM[k]===undefined?null:JSON.parse(MEM[k])},set(k,v){MEM[k]=JSON.stringify(v);try{localStorage.setItem(k,MEM[k])}catch(e){}},del(k){delete MEM[k];try{localStorage.removeItem(k)}catch(e){}}};
 const store={get(){return ls.get(KEY)},set(v){ls.set(KEY,v)}};
-const DEF={grade:null,step:0,ans:{},chips:[],pref:{},done:false,redo:false,type:null,field:null,mq:{},region:'서울',ftype:'all',ffield:'all',q:'',rg:null,checks:{},note:'',fm:'vo',ff:'all',fs:'all',fr:'all',fk:'all',fe:'all',fx:'all',fq:'',sp:'science',sr:'all',user:null,draft:{},edit:null,pfc:[],last:'',delc:null,xi:'',xfrom:'',xt:'guide',xs:[],xk:'',plan:{},ut:'univ',uf:'all',ug:'all',ur:'all',umin:'10',us:'rate',uq:'',uk:'1',ufrom:''};
+const DEF={grade:null,step:0,ans:{},chips:[],pref:{},done:false,redo:false,type:null,field:null,mq:{},region:'서울',ftype:'all',ffield:'all',q:'',rg:null,checks:{},note:'',fm:'vo',ff:'all',fs:'all',fr:'all',fk:'all',fe:'all',fx:'all',fq:'',sp:'science',sr:'all',user:null,draft:{},edit:null,pfc:[],last:'',delc:null,tt:'top',xi:'',xfrom:'',xt:'guide',xs:[],xk:'',plan:{},ut:'univ',uf:'all',ug:'all',ur:'all',umin:'10',us:'rate',uq:'',uk:'1',ufrom:''};
 const ukey=u=>KB+':'+u.sid+':'+u.name;
 let S=Object.assign({},DEF);
 (function(){const u=ls.get(SESS);if(u&&u.sid){KEY=ukey(u);S=Object.assign({},DEF,store.get()||{});S.user=u}})();
 const save=()=>{if(S.user)store.set(S)};
-const ROUTES=['start','result','detail','college','schools','univ','subj','roadmap','portfolio'];
-const NAVT=['흥미·적성 검사','나의 결과','세부 선택·요강','특성화고→대학','분야별 학교 찾기','대학·학과 찾기','교과 선택·학과','중학교 로드맵','내 포트폴리오'];
+const ROUTES=['start','result','detail','college','top','schools','univ','subj','roadmap','portfolio'];
+const NAVT=['흥미·적성 검사','나의 결과','세부 선택·요강','특성화고→대학','상위 특성화·마이스터고','분야별 학교 찾기','대학·학과 찾기','교과 선택·학과','중학교 로드맵','내 포트폴리오'];
 let timer=null,qi=0;
 
 const nv=q=>'https://search.naver.com/search.naver?query='+encodeURIComponent(q);
@@ -713,7 +716,7 @@ function vDetail(){
  <div><h1 style="font-size:clamp(22px,4.4vw,30px)">${T.name}</h1><p class="lead" style="margin-top:6px"><span class="tag acc">${T.tag}</span>${rn?` <span class="tag">내 적합도 ${rn.sc}점</span>`:''}</p></div>
  <p>${T.sum}</p>
  <div class="grid"><div><h4>이런 학생에게 맞아요</h4>${ul(T.who)}</div><div><h4>좋은 점</h4>${ul(T.pros)}</div><div><h4>미리 생각할 점</h4>${ul(T.cons)}</div></div></section>
- ${(t==='vocational'||t==='meister')?'<div class="callout acc"><b>특성화고·마이스터고를 졸업해도 대학에 갈 수 있어요.</b> 특성화고 졸업자 특별전형, 재직자 특별전형 등 대학 가는 길을 알려 드려요. <button class="btn sm" data-a="go" data-v="college">특성화고에서 대학가기</button></div>':''}
+ ${(t==='vocational'||t==='meister')?'<div class="callout acc"><b>특성화고·마이스터고를 졸업해도 대학에 갈 수 있어요.</b> 특성화고 졸업자 특별전형, 재직자 특별전형 등 대학 가는 길을 알려 드려요. <button class="btn sm" data-a="go" data-v="college">특성화고에서 대학가기</button> <button class="btn sm" data-a="go" data-v="top">상위 특성화·마이스터고 보기</button></div>':''}
  <section class="panel"><h2>세부 선택</h2>${subChooser(t)}</section>
  <section class="panel"><h2>입학요강 한눈에 보기</h2><p class="lead">일반적인 전형 흐름이에요. 실제 반영 비율과 일정은 해당 학교의 모집요강에 따라요.</p>
  <div class="grid"><div class="rec"><h4>지원 자격</h4><p>${T.elig}</p></div><div class="rec"><h4>선발 요소</h4><p>${T.weigh}</p></div><div class="rec"><h4>전형 일정 감각</h4><p>${T.sched}</p></div></div>
@@ -1333,13 +1336,116 @@ function sgModal(){
  <div class="row"><button class="btn sm" data-a="go" data-v="college">특성화고 특별전형 보기</button><button class="btn ghost sm" data-a="sgfind">학교 찾기에서 보기</button></div>
  <p class="mut" style="font-size:12px">출처: 성일정보고등학교 교사 조원동 「특성화고의 이해」(학교 설명회 자료). 학교 소개 내용은 학교의 설명이에요. 학교 홈페이지와 모집요강에서 최신 정보를 확인하세요.</p>`);
 }
+
+/* ---------- 개발자 표기 ---------- */
+const devRibbon=()=>`<div class="dev" role="note"><span class="star" aria-hidden="true">✦</span> 이 앱의 개발자 · <b>나로와서당 별숲지기 시소샘</b></div>`;
+/* ---------- 상위 특성화고 · 마이스터고 ---------- */
+const sfind=n=>SCHV.findIndex(s=>s.n===n||s.n.startsWith(n));
+function sdepts(n){const i=sfind(n);if(i<0)return null;const s=SCHV[i];const real=s.d.filter(d=>d.y[0]>0||d.y[1]>0||d.y[2]>0);const list=(real.length?real:s.d).map(d=>d.n.replace(/^\d+\s*/,'').replace(/^공통.*/,'공통과정'));return{i,s,list:[...new Set(list)]}}
+const TOPS=[
+ {n:'대동세무고등학교',t:'대동세무고',reg:'서울 종로구',f:'회계·상경·문과계열',top:true,why:'공기업·공무원 취업과 대학 진학이 모두 알려진 학교예요.',adv:'입학 후 수업을 따라가는 것이 관건이에요. 수학을 잘해야 하고 회계 관련 수업이 많아요.',fact:'2025학년도 대학 진학 117명 합격, 졸업생 취업 38명 중 국가직 지역인재 9급 공무원 6명 합격(일반행정 3·세무직 2·관세직 1)이라고 소개돼요.'},
+ {n:'선린인터넷고등학교',t:'선린인터넷고',reg:'서울 용산구',f:'IT계열',top:true,why:'IT계열 상위권 특성화고로 꼽혀요.',adv:'컴퓨터에 진짜 관심이 있고 실력도 있어야 하고, 공부도 열심히 해야 해요.'},
+ {n:'단국대학교부속소프트웨어고등학교',t:'단국대학교소프트웨어고(단대소고)',reg:'서울 강남구',f:'IT계열',top:true,why:'IT계열 상위권 특성화고로 꼽혀요.',adv:'대학 입학에 많이 신경 쓰는 학교라는 이야기가 있어요.'},
+ {n:'한국디지털미디어고등학교',t:'한국디지털미디어고(디미고)',reg:'경기 안산시',f:'IT계열',top:true,why:'IT계열 상위권 특성화고로 꼽혀요.',adv:'기숙사 생활이 힘들 수 있고, 컴퓨터 실력과 꾸준한 공부가 필요해요. AI 때문에 IT 일자리가 줄고 있다는 걱정이 있어서 학교에서도 대응을 고민하고 있다고 해요.'},
+ {n:'서울공업고등학교',t:'서울공고',reg:'서울',f:'공업계열',why:'공고 중에서는 서울공고가 낫다는 평가가 있어요.',adv:'기계·용접·전기·전자·건축 등 학과가 다양해서 관심 학과를 먼저 정하고 지원해야 해요.'},
+ {n:'용산철도고등학교',t:'용산철도고',reg:'서울 용산구',f:'철도(공업)계열',why:'취업이 잘 된다고 알려져 있어요.',adv:'기관사, 기계, 공무원 쪽으로 진출한다고 해요.'},
+ {n:'서울여자상업고등학교',t:'서울여상',reg:'서울',f:'상업계열(여학생)',why:'여학생에게 추천하는 상업계 학교예요. 취업이 잘 되고 학교 관리가 잘 된다고 해요.',adv:'금융·경영·국제통상 등 상업 분야 학과가 있어요.'},
+ {n:'한국조리과학고등학교',t:'한국조리과학고',reg:'경기 시흥시',f:'조리계열',why:'요리에 관심이 있다면 먼저 살펴볼 학교예요.',adv:'조리과 중심이라 실습과 자격증 준비에 꾸준히 참여해야 해요.'}];
+const MEI=[
+ {n:'수도전기공업고등학교',t:'수도전기공고',reg:'서울',f:'에너지(전기)',txt:'전기·에너지 분야 마이스터고예요. 전기에너지, 에너지전자제어, 에너지정보통신, 에너지기계처럼 에너지를 중심으로 배워요.'},
+ {n:'수원하이텍고등학교',t:'수원하이텍고',reg:'경기 수원시',f:'메카트로닉스',txt:'기계와 전자를 함께 배우는 메카트로닉스 분야 마이스터고예요. 자동화와 제조 현장의 기술인을 길러요.'},
+ {n:'용인반도체',t:'용인반도체고',reg:'경기 용인시',f:'반도체',special:true,txt:'삼성전자·SK하이닉스 반도체 클러스터 한가운데에 세워지는 반도체 학교예요. 2027학년도에 특성화고로 개교하고 2028학년도 입학생부터 마이스터고로 바뀔 예정이에요. 지금 중2 학생이 지원하는 해가 바로 마이스터고 첫 해예요.'},
+ {n:'서울로봇고등학교',t:'서울로봇고',reg:'서울',f:'로봇',txt:'로봇 설계, 로봇 소프트웨어, 로봇 정보통신, 로봇 제어를 배워요.'},
+ {n:'대덕소프트웨어마이스터고등학교',t:'대덕소프트웨어마이스터고',reg:'대전',f:'소프트웨어',txt:'소프트웨어 개발 분야 마이스터고예요. 입학 경쟁이 높은 학교로 알려져 있어요.'},
+ {n:'광주소프트웨어마이스터고등학교',t:'광주소프트웨어마이스터고',reg:'광주',f:'소프트웨어',txt:'SW개발, 스마트IoT, 인공지능을 배워요. 입학 경쟁이 높은 학교로 알려져 있어요.'},
+ {n:'대구소프트웨어마이스터고등학교',t:'대구소프트웨어마이스터고',reg:'대구',f:'SW·SW융합',txt:'소프트웨어개발과 인공지능소프트웨어를 배워요. 입학 경쟁이 높은 학교로 알려져 있어요.'},
+ {n:'부산소프트웨어마이스터고등학교',t:'부산소프트웨어마이스터고',reg:'부산',f:'소프트웨어',txt:'소프트웨어 분야 마이스터고예요.'},
+ {n:'경북소프트웨어마이스터고등학교',t:'경북소프트웨어마이스터고',reg:'경북 구미시',f:'디지털',txt:'소프트웨어개발, 인공지능소프트웨어, 게임개발을 배워요.'},
+ {n:'인천전자마이스터고등학교',t:'인천전자마이스터고',reg:'인천',f:'전자·통신·AI',txt:'인공지능전자, 전자제어, 전자회로, 정보통신을 배워요.'},
+ {n:'평택마이스터고등학교',t:'평택마이스터고',reg:'경기 평택시',f:'자동차·기계',txt:'기계·전자 융합 분야를 배워요. 반도체·자동차 산업이 가까운 지역에 있어요.'},
+ {n:'경기게임마이스터고등학교',t:'경기게임마이스터고',reg:'경기',f:'게임 콘텐츠',txt:'게임 개발 분야 마이스터고예요.'},
+ {n:'미림마이스터고등학교',t:'미림마이스터고',reg:'서울',f:'뉴미디어콘텐츠',txt:'뉴미디어 디자인과 뉴미디어 소프트웨어를 배워요.'},
+ {n:'서울도시과학기술고등학교',t:'서울도시과학기술고',reg:'서울',f:'해외건설·플랜트',txt:'해외 시설물 건설, 해외 플랜트 설비 등을 배워요.'},
+ {n:'한국바이오마이스터고등학교',t:'한국바이오마이스터고',reg:'충북',f:'바이오',txt:'바이오식품과 바이오제약을 배워요.'}];
+const SEMI=[
+ {n:'용인반도체',t:'용인반도체고',reg:'경기 용인',note:'2027 특성화고 개교 → 2028학년도 입학생부터 마이스터고 전환 예정',link:'yi'},
+ {n:'서울반도체고등학교',t:'서울반도체고',reg:'서울',note:'마이스터고로 운영 예정(현재 자료는 이전 학과 기준)'},
+ {n:'충북반도체고등학교',t:'충북반도체고',reg:'충북',note:'반도체장비과, 반도체제조과, 반도체케미컬과'},
+ {n:'충남반도체마이스터고등학교',t:'충남반도체마이스터고',reg:'충남',note:'반도체융합과'},
+ {n:'한국반도체마이스터고등학교',t:'한국반도체마이스터고',reg:'경북',note:'반도체융합과'},
+ {n:'대구반도체마이스터고등학교',t:'대구반도체마이스터고',reg:'대구',note:'반도체 장비·제조 계열'},
+ {n:'인천반도체고등학교',t:'인천반도체고',reg:'인천',note:'반도체공정·설계·소프트웨어·장비(특성화고)'}];
+function schoolCard(x,extra){
+ const d=sdepts(x.n);const tot=d?d.s.d.reduce((a,t)=>a+t.y[0],0):0;
+ return `<article class="rec"><div class="row" style="justify-content:space-between;gap:6px"><h3 style="font-size:16px">${esc(x.t)}</h3>${x.top?'<span class="tag amb">상위권으로 꼽혀요</span>':''}</div>
+ <div class="row" style="gap:6px"><span class="tag">${esc(x.reg)}</span><span class="tag acc">${esc(x.f)}</span>${tot?`<span class="tag">1학년 ${tot}명</span>`:''}</div>
+ ${x.why?`<p>${esc(x.why)}</p>`:''}${x.txt?`<p>${esc(x.txt)}</p>`:''}${x.adv?`<p class="mut" style="font-size:14px"><b>서울 진로교사 조언·특징</b> ${esc(x.adv)}</p>`:''}${x.fact?`<p class="mut" style="font-size:13px">${esc(x.fact)}</p>`:''}
+ ${d&&d.list.length?`<div class="dps">${d.list.slice(0,8).map(n=>`<span class="dp">${esc(n)}</span>`).join('')}</div>`:''}
+ <div class="row">${x.special?'<button class="btn sm" data-a="yi">용인반도체고 자세히 보기</button>':''}${d?`<button class="btn ${x.special?'ghost ':''}sm" data-a="topsch" data-v="${d.i}">학과·입학 정보</button>`:''}${ext(nv(x.t+' 입학전형 모집요강'),'모집요강 검색','ghost')}</div>${extra||''}</article>`;
+}
+function topView(){
+ const T=[['top','상위 특성화고'],['mei','마이스터고'],['semi','반도체 학교 특집'],['more','더 살펴볼 학교']];
+ const tabs=`<div class="tabs wrapt" role="group" aria-label="보기 방식">${T.map(t=>`<button data-a="toptab" data-v="${t[0]}" aria-pressed="${S.tt===t[0]}">${t[1]}</button>`).join('')}</div>`;
+ let body='';
+ if(S.tt==='mei'){
+  body=`${mascot('chick','마이스터고는 기술 분야 전문 인재를 키우는 학교야!')}
+  <div class="callout acc"><b>마이스터고란?</b> 산업계 수요에 맞춰 기술 인재를 키우는 직업계 특수목적고예요. 학비 지원과 기숙사가 있는 학교가 많고, 기업과 연계한 실습·취업 지원이 강해요. 입학 전형은 학교별로 달라서 모집요강을 꼭 확인하세요. (순서는 순위가 아니라 소개 순서예요)</div>
+  <div class="grid">${MEI.map((m,i)=>schoolCard(m,'')).join('')}</div>`;
+ }else if(S.tt==='semi'){
+  body=`${mascot('sprout','반도체에 관심이 많다면 여기부터 살펴봐!')}
+  <div class="panel soft"><h3>왜 반도체 학교가 인기일까요?</h3><p>반도체는 스마트폰, 자동차, 인공지능에 모두 들어가는 핵심 부품이에요. 용인·화성·평택에는 삼성전자와 SK하이닉스를 비롯한 제조·장비 기업이 모여 있는 반도체 산업 지역이 있어요. 그래서 반도체 분야 학교가 새로 생기고 있어요.</p></div>
+  <div class="panel"><div class="row" style="justify-content:space-between;gap:10px"><div><span class="tag amb">현 중2 주목</span><h3 style="margin-top:6px">용인반도체고등학교</h3><p class="lead" style="font-size:14px">2027학년도 특성화고 개교, 2028학년도 입학생부터 마이스터고 전환 예정 · 경기도 용인시 처인구 남사읍</p></div><button class="btn" data-a="yi">자세히 알아보기</button></div></div>
+  <h3>반도체 분야 학교 한눈에</h3><div class="tablewrap"><table><thead><tr><th>학교</th><th>지역</th><th>학과·비고</th><th></th></tr></thead><tbody>${SEMI.map(s=>{const d=sdepts(s.n);return `<tr><th>${esc(s.t)}</th><td>${esc(s.reg)}</td><td>${esc(s.note)}</td><td>${s.link?'<button class="btn sm" data-a="yi">보기</button>':d?`<button class="btn ghost sm" data-a="topsch" data-v="${d.i}">보기</button>`:''}</td></tr>`}).join('')}</tbody></table></div>
+  <p class="mut" style="font-size:13px">학교 정보는 HIFIVE 학과 현황과 학교 설명 자료를 바탕으로 했어요. 학과 이름과 모집은 해마다 바뀔 수 있어요.</p>`;
+ }else if(S.tt==='more'){
+  body=`${mascot('cloud','분위기가 좋고 취업 이야기가 많은 학교도 같이 보자!')}
+  <p class="lead" style="font-size:14px">아래 학교들은 학교 설명 자료나 진로교사 조언에서 자주 소개되는 학교예요. 순위나 보장이 아니라 <b>관심을 갖고 살펴볼 학교</b>예요.</p>
+  <div class="grid"><article class="rec"><div class="row" style="justify-content:space-between"><h3 style="font-size:16px">성일정보고등학교</h3><span class="tag acc">예시 학교</span></div><span class="tag">경기 성남시</span><p>상업·IT·뷰티·부사관 학과가 있고 전공·실습 시간이 많아요. 도제 교육(소프트웨어개발과)과 판교 테크노밸리 가까운 일자리가 소개돼요.</p><div class="row"><button class="btn sm" data-a="sg">설명 자료 보기</button></div></article>
+  <article class="rec"><div class="row" style="justify-content:space-between"><h3 style="font-size:16px">경화여자 English Business 고등학교</h3><span class="tag">경기 성남시</span></div><p>공공행정사무과, 비즈니스영어과, 창업마케팅과가 있어요. 학교 설명 자료에서 금융기관·공무원·부사관 진출과 재직자 전형 대학 진학 사례가 소개돼요.</p><div class="row"><button class="btn ghost sm" data-a="go" data-v="college">특성화고에서 대학가기</button></div></article>
+  ${[['서울디자인고등학교','서울디자인고','서울','디자인'],['미림마이스터고등학교','미림마이스터고','서울','뉴미디어'],['수원정보과학고등학교','수원정보과학고','경기 수원','IT'],['한국애니메이션고등학교','한국애니메이션고','경기','애니메이션·콘텐츠']].map(a=>{const d=sdepts(a[0]);return d?schoolCard({n:a[0],t:a[1],reg:a[2],f:a[3]}):''}).join('')}</div>`;
+ }else{
+  body=`${mascot('chick','서울 진로교사 선생님들이 알려 준 학교들이야!')}
+  <div class="callout acc"><b>상위권 특성화고는 어떤 학교일까요?</b><br>전국 상위권 특성화고로는 <b>대동세무고(회계·상경), 선린인터넷고(IT), 단국대학교소프트웨어고(IT), 한국디지털미디어고(IT)</b>가 자주 소개돼요. 교사 자료에 따르면 중학교 내신이 높은 학생들이 진학하고, 공기업·대기업 취업과 상위권 대학 진학도 비교적 많은 편이라고 해요.</div>
+  <div class="grid">${TOPS.map(t=>schoolCard(t,'')).join('')}</div>
+  <div class="panel soft"><h3>학교를 고를 때 이런 점도 생각해요</h3><ul class="list"><li><b>수업을 따라갈 수 있나요?</b> 상위권 학교는 수학·전공 수업이 어렵고, 입학 후 자퇴하는 경우도 있다고 해요. 내가 좋아하고 꾸준히 할 수 있는 분야인지 확인하세요.</li><li><b>기숙사 생활이 가능한가요?</b> 기숙사 학교는 자율 시간이 적고 힘들 수 있어요.</li><li><b>분야의 미래도 생각해요.</b> AI 때문에 일부 IT 일자리가 줄고 있어서, 학교들도 교육과정을 바꾸며 대응하고 있어요.</li><li><b>대학 진학이 목표라면</b> 특성화고는 동일계열 지원 등 제약이 있어요. “특성화고에서 대학가기”를 꼭 읽어 보세요.</li><li>설명회와 학교 방문으로 분위기를 직접 확인해요.</li></ul>
+  <p class="mut" style="font-size:12px">출처: 금촌중학교 진로교사 「직업계고, 일반고를 고민하는 학생을 위한 취업? 진학?」 자료, 서울 지역 진로교사 조언. 개인 의견이 포함되어 있고 학교 상황은 해마다 달라져요.</p></div>`;
+ }
+ return `${NOTICE}<section class="panel"><h2>상위 특성화·마이스터고</h2><p class="lead">학습 분위기가 좋고 취업·진학 이야기가 많이 나오는 학교를 소개해요. 학교 이름을 누르면 학과와 입학 정보를 볼 수 있어요.</p>${tabs}${body}</section>
+ <div class="callout">이 화면은 학교 설명 자료와 진로교사 조언을 정리한 참고용이에요. 입학 성적과 취업 결과는 해마다 달라져요. 학교 홈페이지와 모집요강에서 최신 내용을 확인하세요.</div>`;
+}
+const vTop=topView;
+/* ---------- 용인반도체고등학교 ---------- */
+const YIDEPT=[['반도체제조과','4학급 · 64명','반도체 공정의 흐름을 이해하고 공정 장비를 운용하는 제조 실무 인재','주요 학습','전·후공정 · 공정 장비 운용 · 품질·검사','진출 분야','공정 오퍼레이터 · 제조기술 · 품질관리'],['반도체장비과','4학급 · 64명','반도체 장비를 설계·제작하고 제어·유지보수하는 장비 기술 실무 인재','주요 학습','기구·전장 설계 · 장비 조립 · 제어·유지보수','진출 분야','장비설계 · 장비제조 · 장비 유지보수']];
+function yiModal(){
+ const dl=(a)=>`<dl class="kv">${a.map(x=>`<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('')}</dl>`;
+ modal(`<h2>용인반도체고등학교 <span class="tag amb">현 중2 주목</span></h2>
+ <p class="lead" style="font-size:14px">AI 기반 차세대 반도체 전문가를 키우는 학교예요. 학교 입학설명회 자료(2027학년도 신입생)를 바탕으로 정리했어요.</p>
+ <div class="callout acc"><b>지금 중2 학생이라면?</b> 2028학년도 입학생부터 마이스터고로 바뀔 예정이에요. 아래 입학전형은 2027학년도 기준이라서, 중3이 되면 2028학년도 모집요강을 꼭 다시 확인하세요.</div>
+ <h4>한눈에 보기</h4>${dl([['학교','용인반도체고등학교 (2027학년도 특성화고 개교, 2028학년도 입학생부터 마이스터고 전환 예정)'],['위치','경기도 용인시 처인구 남사읍 남사로 7'],['규모','2027학년도 8학급(학급당 16명, 모두 128명) · 공학(남·여) · 경기도 모집'],['학과','반도체제조과 4학급(64명), 반도체장비과 4학급(64명)']])}
+ <h4>왜 용인일까요?</h4><p>용인은 대한민국 반도체 산업의 중심이에요. 삼성전자와 SK하이닉스가 함께하는 첨단 반도체 산업 기반이 있고, 기업·연구기관·교육기관이 이어지는 산업 생태계 속에서 배울 수 있어요.</p>
+ <p class="mut" style="font-size:13px">학교 주변 반도체 기업 예시: 용인(삼성전자, SK하이닉스, LAM리서치, 유진테크, 주성엔지니어링), 화성(삼성전자, 세메스, TEL, ASML, 원익IPS), 평택(삼성전자, 원익IPS, 세메스, TEL). 지역 소개 예시이고 채용을 확정하는 것은 아니에요.</p>
+ <h4>학과 소개</h4><div class="grid">${YIDEPT.map(d=>`<article class="rec"><h3 style="font-size:16px">${d[0]} <span class="tag">${d[1]}</span></h3><p>${d[2]}</p><p class="mut" style="font-size:14px"><b>${d[3]}</b> ${d[4]}<br><b>${d[5]}</b> ${d[6]}</p></article>`).join('')}</div>
+ <h4>3년 동안 이렇게 배워요 (AI 기반 차세대 반도체 교육과정)</h4>${dl([['1학년 공통 기초','반도체 기초·반도체 공정 기초, 인공지능 프로그래밍, 전기회로, 전자회로, 디지털논리회로, 기계일반'],['2학년 전공 실무','제조과: 반도체 재료·제조·공정 기술·설비·안전 / 장비과: 반도체 장비·유지보수·공정 기술·설비·안전'],['3학년 전공 심화·AI 융합','제조과: 공정 설계·반도체 개발·소자 제조·패키징 / 장비과: 전장제어·장비 운영관리·스마트공장']])}
+ <p class="mut" style="font-size:13px">공통 기초 → 학과별 전공 실무 → 전공 심화·AI 융합 프로젝트 순서로 단계적으로 배워요. 반도체를 처음 접해도 기초부터 시작해요.</p>
+ <h4>첨단 실습 환경</h4><ul class="list"><li>교육기자재 <b>130억 원 규모</b>, 전공실습실 13개(반도체제조공정실, 반도체장비조립실, 반도체장비제어실, 반도체공정성능평가실 등)</li><li>8대 공정 실습실(8대 공정 시뮬레이터), 노광 공정 실습, 식각 공정 실습, 검사·측정 실습실</li><li>배운 교과를 실제 실습실과 기자재로 연결해요.</li></ul>
+ <h4>전공 연계 자격증</h4>${dl([['전기·전자','전기기능사, 전자캐드기능사, 임베디드기능사'],['반도체·자동화','반도체설비보전기능사, 자동화설비기능사'],['융합·AI','전산응용기계제도기능사, 스마트공장기능사, 3D프린터운용기능사, 프로그래밍기능사, AICE(인공지능) 자격증']])}<p class="mut" style="font-size:12px">자격 종목은 학교 운영 계획에 따라 달라질 수 있어요.</p>
+ <h4>미래형 기숙사(기숙사)</h4><ul class="list"><li>288명 수용, 144실(2인 1실), 장애인실 2실. 학습·생활 지원 시설(정독실, 정보검색실, 체력단련실, 휴게공간 등)이 있어요.</li><li>완공 예정은 2027학년도 2학기예요. 1학기는 통학하고, 2학기부터 희망자가 이용할 수 있어요. 기숙사 비용은 수익자 부담이에요.</li></ul>
+ <h4>산업체 연계 취업·진로 로드맵</h4>${dl([['1학년 진로 탐색','반도체 산업과 직무 이해, 기업·클린룸 현장 견학, 산업체 실무자 초청 특강, 학생별 적성·진로 상담'],['2학년 전공·직무 역량 강화','전공 실습, 직무별 취업맞춤반, 기업 연계 실습·프로젝트, 현장 직무 체험'],['3학년 취업 준비·연계','기업 현장실습, 이력서·면접 준비, 산업안전·직장 적응 교육, 학생 맞춤형 기업 연계']])}
+ <h4>졸업 후 진로는 하나가 아니에요</h4><ul class="list"><li><b>전공 분야 취업:</b> 반도체 제조·장비 기업, 공무원·공공기관</li><li><b>대학 진학:</b> 학생의 희망과 적성에 따른 대학 진학</li><li><b>취업 후 대학 진학:</b> 재직자 특별전형, 계약학과, 일학습병행. 취업 후에도 배움은 계속돼요.</li></ul>
+ <h4>입학전형 (2027학년도 신입생 기준)</h4>${dl([['모집','반도체제조과 64명, 반도체장비과 64명(모두 특별전형, 일반전형 0명), 모두 128명 · 공학 · 경기 모집'],['지원 자격','경기도 중학교 졸업예정자 · 경기도 거주 중학교 졸업자 · 경기도 거주 검정고시 등 동등학력 인정자 · 타 시·도 특성화중 졸업예정자 중 경기도 거주자'],['전형','진로적성 특별전형 (취업 의지와 성장 가능성·창의성을 갖춘 학생, 중학교장 추천 필요)'],['1차 (100점)','출결상황 40점 + 봉사활동 10점 + 교과성적 50점 → 모집 정원의 1.2배수 선발'],['2차 (200점)','1차 점수 100점 + 2차 평가 100점(담임추천서 5점 + 자기소개서·취업희망서 35점 + 면접 60점)'],['면접','품성, 지원동기, 발표력을 봐요. 동점이면 면접, 자기소개서·취업희망서, 1차 점수 순으로 가려요.'],['주의','2차 전형 60점 미만이면서 취업 의지가 부족하면 불합격될 수 있어요.']])}
+ <div class="tablewrap"><table><thead><tr><th>2027학년도 일정</th><th>날짜</th></tr></thead><tbody><tr><th>원서 접수</th><td>2026.11.03(화) ~ 11.05(목) 17:00 (온라인 접수, 검정고시·특례는 방문 접수, 전형료 없음)</td></tr><tr><th>1차 합격자 발표</th><td>11.06(금) 11:00</td></tr><tr><th>면접·신체검사</th><td>11.09(월) 14:00</td></tr><tr><th>최종 합격자 발표</th><td>11.11(수) 10:00</td></tr></tbody></table></div>
+ <p class="mut" style="font-size:12px">제출 서류: 담임교사 추천서, 자기소개서 및 취업희망서, 증빙서류. 자기소개서는 ①성장 과정·생활신조·성격의 장단점(150~200자) ②중학교 활동: 봉사·동아리·취미·자격증·독서(150~200자), 취업희망서는 희망 취업 분야·진로 설계·취업 의지를 써요. 자기소개서는 면접 기초 자료로 쓰여요. 모집 정원은 인가 확정 후 바뀔 수 있어요.</p>
+ <h4>현 중2, 이렇게 준비해 봐요</h4><ul class="list"><li><b>지금(중2):</b> 수학·과학 기초 다지기, 코딩·인공지능 기초 체험, 반도체 관련 진로체험·견학 찾아보기, 출결과 봉사활동 꾸준히 하기</li><li><b>중3 1학기:</b> 2028학년도 모집요강 확인(마이스터고 전환 후 전형 방법), 학교 설명회 참석, 지원 동기 정리</li><li><b>중3 2학기:</b> 담임선생님·학교장 추천 준비, 자기소개서·취업희망서 쓰기, 면접 연습(품성·지원동기·발표력)</li><li>교과 성적(1차 50점)과 출결(40점)이 크게 반영되니 꾸준히 관리해요.</li></ul>
+ <div class="row"><button class="btn sm" data-a="go" data-v="roadmap">중학교 로드맵 보기</button>${ext(nv('용인반도체고등학교 입학전형 모집요강'),'모집요강 검색','ghost')}</div>
+ <p class="mut" style="font-size:12px">출처: 용인반도체고등학교 「2027학년도 신입생 입학설명회」 자료. 학교 소개 내용은 학교의 설명이에요.</p>`);
+}
 /* ---------- 로그인 · 포트폴리오 · 관리자 ---------- */
 // 구글 앱스스크립트 웹앱 주소를 넣으면 모든 학생의 기록이 구글 시트에 모여요. 비워 두면 이 기기에만 저장돼요(체험 모드).
 const CONFIG={api:'https://script.google.com/macros/s/AKfycbwV63K71aIRuPxf57kPqGIIS8TQMPN47koMtcEIxDWwmjaFSjQjZr65kwrl2bVtjaIypw/exec'};
 const normDate=d=>{d=String(d||'');if(/^\d{4}-\d{2}-\d{2}$/.test(d))return d;const t=new Date(d);return isNaN(t)?d:t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')};
 const LDB='gogyo-portfolio-local';
-const ACTS=['흥미·적성 검사','나의 결과 확인','고교 유형 살펴보기','분야별 학교 찾기','대학·학과 찾기','교과 선택(고교학점제) 살펴보기','입학요강 확인','중학교 로드맵','학교 설명회·체험·면담','특성화고 특별전형 살펴보기','기타'];
-const ROUTE_ACT={start:ACTS[0],result:ACTS[1],detail:ACTS[2],college:ACTS[9],schools:ACTS[3],univ:ACTS[4],subj:ACTS[5],roadmap:ACTS[7]};
+const ACTS=['흥미·적성 검사','나의 결과 확인','고교 유형 살펴보기','분야별 학교 찾기','대학·학과 찾기','교과 선택(고교학점제) 살펴보기','입학요강 확인','중학교 로드맵','학교 설명회·체험·면담','특성화고 특별전형 살펴보기','상위 특성화·마이스터고 살펴보기','기타'];
+const ROUTE_ACT={start:ACTS[0],result:ACTS[1],detail:ACTS[2],college:ACTS[9],top:ACTS[10],schools:ACTS[3],univ:ACTS[4],subj:ACTS[5],roadmap:ACTS[7]};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const pad=n=>String(n).padStart(2,'0');
 const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
@@ -1358,7 +1464,7 @@ let PFSTAT='';
 
 /* 로그인 */
 function vLogin(){
- return `<section class="panel" style="max-width:460px;margin:20px auto;width:100%">${mascotRow()}<div class="row" style="gap:10px"><svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="var(--brand)" stroke-width="2.5"/><path d="M16 5l4 11-4 11-4-11z" fill="var(--acc)"/><path d="M16 5l4 11h-8z" fill="var(--brand)"/></svg><h1 style="font-size:28px">고교 나침반</h1></div>
+ return `<div style="max-width:460px;margin:12px auto 0;width:100%">${devRibbon()}</div><section class="panel" style="max-width:460px;margin:20px auto;width:100%">${mascotRow()}<div class="row" style="gap:10px"><svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="var(--brand)" stroke-width="2.5"/><path d="M16 5l4 11-4 11-4-11z" fill="var(--acc)"/><path d="M16 5l4 11h-8z" fill="var(--brand)"/></svg><h1 style="font-size:28px">고교 나침반</h1></div>
  <p class="lead">나에게 맞는 고등학교를 찾고, 활동할 때마다 날짜·다짐·궁금한 점을 쌓아 나만의 진로 포트폴리오를 만들어요.</p>
  <form id="lf" class="login" autocomplete="off" novalidate>
   <div class="field"><label for="sid">학번 (숫자 4자리)</label><input class="sel" id="sid" inputmode="numeric" maxlength="4" placeholder="예: 3105" autocomplete="off"></div>
@@ -1517,7 +1623,8 @@ function render(top){
  if(r==='admin'){$('#nav').innerHTML='';$('#app').innerHTML=vAdmin();document.title='관리자 · 고교 나침반';window.scrollTo(0,top?0:y);return}
  if(!S.user){$('#nav').innerHTML='';$('#app').innerHTML=vLogin();document.title='고교 나침반';window.scrollTo(0,0);return}
  $('#nav').innerHTML=ROUTES.map((k,i)=>`<button data-a="go" data-v="${k}" ${k===r?'aria-current="page"':''}><b>${i+1}</b>${NAVT[i]}</button>`).join('');
- let html={start:vStart,result:vResult,detail:vDetail,schools:vSchools,college:vCollege,univ:vUniv,subj:vSubj,roadmap:vRoadmap,portfolio:vPortfolio}[r]();
+ let html={start:vStart,result:vResult,detail:vDetail,schools:vSchools,college:vCollege,top:vTop,univ:vUniv,subj:vSubj,roadmap:vRoadmap,portfolio:vPortfolio}[r]();
+ if(r==='start')html=devRibbon()+html;
  if(ROUTE_ACT[r])html+=cta(r);
  $('#app').innerHTML=html;
  document.title=(r==='start'?'':NAVT[ROUTES.indexOf(r)]+' · ')+'고교 나침반';
@@ -1533,6 +1640,9 @@ document.addEventListener('click',e=>{
  const a=el.dataset.a,v=el.dataset.v;
  if(a==='go'){closeModal();go(v);return}
  if(a==='logout'){doLogout();return}
+ if(a==='yi'){yiModal();return}
+ if(a==='toptab'){S.tt=v;save();render(false);return}
+ if(a==='topsch'){vModal(+v);return}
  if(a==='sg'){sgModal();return}
  if(a==='sgfind'){S.fm='vo';S.fk='all';S.ff='all';S.fs='all';S.fr='all';S.fe='all';S.fx='all';S.fq='성일정보고';closeModal();save();go('schools');return}
  if(a==='toGG'){S.fm='gg';save();go('schools');return}
