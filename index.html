@@ -79,7 +79,9 @@ main{padding-block:22px 40px;display:flex;flex-direction:column;gap:18px}
 .prog i{display:block;height:100%;background:var(--acc);border-radius:99px;transition:width .3s}
 .q{display:flex;flex-direction:column;gap:8px;padding-block:12px;border-top:1px solid var(--line)}
 .q:first-of-type{border-top:0}
-.likert{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.likert{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.likert button{font-size:12.5px;padding:9px 2px}
+@media (max-width:520px){.likert{gap:4px}.likert button{font-size:11.5px;padding:8px 1px;letter-spacing:-.4px}}
 .likert button,.opt{border:1.5px solid var(--line);background:var(--sf);border-radius:10px;padding:9px 4px;font-size:13px;cursor:pointer;line-height:1.3}
 .likert button[aria-pressed="true"],.opt[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft);color:var(--acc);font-weight:700}
 .opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
@@ -235,6 +237,7 @@ button.barbtn:hover{background:var(--sf2)}
 .mpt{stroke:var(--sf);stroke-width:1.5}
 .mlb{font-size:11.5px;font-weight:700;fill:var(--ink);paint-order:stroke;stroke:var(--sf);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
 .lg{white-space:nowrap}
+a.chip{text-decoration:none;color:inherit;display:inline-flex;align-items:center}a.chip:hover{border-color:var(--acc)}
 footer{padding-block:10px 40px;color:var(--mut);font-size:13px}
 @media (max-width:560px){.brand span{display:none}.kv{grid-template-columns:1fr}.tl li{grid-template-columns:1fr;gap:2px}.panel{padding:16px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -291,7 +294,8 @@ const Q=[
 ['E','새로운 계획을 세워 친구들을 설득하고 이끄는 일이 재미있다.'],
 ['C','해야 할 일을 목록으로 만들어 하나씩 지워 가면 마음이 편하다.']];
 const QP=Math.ceil(Q.length/6);
-const LK=['전혀 아니다','아니다','그렇다','매우 그렇다'];
+const LK=['전혀 아니다','조금 아니다','보통이다','조금 그렇다','매우 그렇다'];
+function migLv(){if(S.lv!==2){Object.keys(S.ans).forEach(k=>{const v=S.ans[k];S.ans[k]=[0,1,2,4,5][v]||v});S.lv=2;save()}}
 const PQ=[
  {k:'p1',q:'고등학교 졸업 후 계획은?',o:[['college','대학 진학이 목표'],['mix','취업과 대학, 둘 다 열어두고 싶어요'],['job','졸업 후 바로 취업·기술 자격이 목표'],['unk','아직 모르겠어요']]},
  {k:'p2',q:'어떤 방식의 수업이 잘 맞나요?',o:[['theory','교과 수업·토론·탐구 중심'],['practice','실습·현장 체험 중심'],['art','실기·창작 연습 중심']]},
@@ -604,7 +608,7 @@ const nv=q=>'https://search.naver.com/search.naver?query='+encodeURIComponent(q)
 const ext=(u,t,c)=>`<a class="btn ${c||'ghost'} sm" href="${u}" target="_blank" rel="noopener">${t}<span aria-hidden="true">↗</span></a>`;
 
 /* ---------- 계산 ---------- */
-function pcts(){const s={},n={};Q.forEach((q,i)=>{const v=S.ans[i];if(v){s[q[0]]=(s[q[0]]||0)+v;n[q[0]]=(n[q[0]]||0)+1}});const o={};'RIASEC'.split('').forEach(k=>{o[k]=n[k]?Math.round((s[k]/n[k]-1)/3*100):0});return o}
+function pcts(){migLv();const s={},n={};Q.forEach((q,i)=>{const v=S.ans[i];if(v){s[q[0]]=(s[q[0]]||0)+v;n[q[0]]=(n[q[0]]||0)+1}});const o={};'RIASEC'.split('').forEach(k=>{o[k]=n[k]?Math.round((s[k]/n[k]-1)/4*100):0});return o}
 function rank(){
  const p=pcts(),c=S.chips,out=[];
  const fchips=c.filter(x=>FI[x]);
@@ -649,7 +653,7 @@ function vStart(){
   return `${NOTICE}<section class="panel"><h1>검사를 마쳤어요</h1><p class="lead">가장 잘 맞는 유형은 <b>${TYPES[r.id].name}</b>이에요. 결과를 보고 세부 선택으로 이어 가거나, 다시 검사해 볼 수 있어요.</p>
   <div class="row"><button class="btn" data-a="go" data-v="result">결과 보기</button><button class="btn ghost" data-a="redo">처음부터 다시 검사하기</button></div></section>`;
  }
- const steps=QP+4,st=S.step,pg=Math.round(st/(steps-1)*100);
+ migLv();const steps=QP+4,st=S.step,pg=Math.round(st/(steps-1)*100);
  let body='';
  if(st===0){
   body=`<h1>나에게 맞는 고등학교,<br>중1부터 찾아볼까요?</h1>
@@ -686,6 +690,7 @@ function vResult(){
   <p class="lead">${RI[tt[0]].n} 성향이 가장 높고, 이어서 ${RI[tt[1]].n} 성향이 높아요. <b>${RI[tt[0]].h}</b> 타입에 가까운 모습이에요${p[tt[0]]-p[tt[2]]<15?'. 상위 성향의 차이가 크지 않아 여러 분야가 두루 맞을 수 있어요':''}.</p>
   <div style="display:flex;flex-direction:column;gap:8px">${bars}</div>
   <div class="callout">0~100점은 이 간이 검사 안에서의 상대적 위치예요. 더 정확한 검사는 교육부 <a href="https://www.career.go.kr" target="_blank" rel="noopener">커리어넷</a>의 직업흥미검사·진로적성검사로 확인해 보세요.</div></section>
+${holView()}
   <section class="panel"><h2>추천 고등학교 유형</h2>${compAverse()?'<div class="callout acc"><b>경쟁이 부담된다고 답해서</b> 과학고·외고·자사고처럼 경쟁이 높은 학교는 추천에서 뒤로 두고, 일반고를 먼저 살펴보도록 했어요. 그래도 관심이 있다면 “다른 유형 점수 보기”나 “고교 유형 살펴보기”에서 직접 확인할 수 있어요.</div>':''}<div class="grid">${r.slice(0,3).map(rc).join('')}</div>
   <details><summary style="cursor:pointer;font-weight:700">다른 유형 점수 보기</summary><div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">${r.slice(3).map(x=>`<div class="bar" style="grid-template-columns:9em 1fr 3em"><span>${TYPES[x.id].name}</span><div class="tr"><i style="width:${x.sc}%"></i></div><em>${x.sc}</em></div>`).join('')}</div></details></section>
   <section class="panel soft"><h3>직업계고를 고민한다면, 이런 분야가 어울려요</h3><div class="grid">${fr.map(x=>`<div class="rec"><h3>${x.f.n}</h3><p class="lead" style="font-size:13px">${x.f.d}</p>${meter(x.sc)}<p class="mut" style="font-size:13px">연계 대학 학과 취업률: ${uniRateTxt(x.f.id)}</p><div class="row"><button class="btn ghost sm" data-a="pickf" data-v="${x.f.id}">분야 자세히 보기</button><button class="btn ghost sm" data-a="toU" data-v="${x.f.id}">대학 학과 보기</button></div></div>`).join('')}</div></section>
@@ -1093,6 +1098,7 @@ function khuCard(k,mine){
 function khuView(){
  const sel=S.xk&&KFIELDS.includes(S.xk)?S.xk:KFIELDS[0],rows=KHU.filter(k=>k.f===sel),mine=S.xs.length?S.xs:null;
  return `${mascot('chick','대학이 “이 과목은 꼭 들어요!” 하고 알려 주는 표예요.')}
+ <div class="callout">이 표는 <b>경희대학교 자연계열</b>만 있어요. 인문·사회·교육·예체능·의약 등 다른 계열은 <button class="btn sm" data-a="xtab" data-v="naver">네이버 학과별 추천과목</button>에서 찾아보세요.</div>
  <div class="callout"><b>2028 경희대학교 자연계열 전공 학문분야별 고등학교 교과 이수 권장 과목</b>(2022 개정 교육과정 기준)<br>
  <b class="tcore">핵심과목</b>은 학과에서 공부하려면 ‘필수적으로 이수’하길 권하는 과목이에요(미이수 시 감점에 활용). <b class="trec">권장과목</b>은 ‘가급적 이수’를 권하는 과목이에요(이수 시 가점에 활용).</div>
  <h3>① 학문 분야를 고르세요</h3><div class="row">${KFIELDS.map(f=>`<button class="chip" data-a="xk" data-v="${esc(f)}" aria-pressed="${f===sel}">${esc(f)}</button>`).join('')}</div>
@@ -1254,9 +1260,9 @@ function planFill(auto){
 }
 /* ---------- 화면 ---------- */
 function vSubj(){
- const T=[['guide','분야로 보기'],['subj','과목으로 학과 찾기'],['khu','대학 권장과목'],['plan','나의 학업설계서'],['dict','과목 사전'],['credit','고교학점제 이해'],['jc','전문대학 안내']];
+ const T=[['guide','분야로 보기'],['subj','과목으로 학과 찾기'],['naver','네이버 학과별 추천과목'],['khu','경희대 권장과목(자연계)'],['plan','나의 학업설계서'],['dict','과목 사전'],['credit','고교학점제 이해'],['jc','전문대학 안내']];
  const tabs=`<div class="tabs wrapt" role="group" aria-label="보기 방식">${T.map(t=>`<button data-a="xtab" data-v="${t[0]}" aria-pressed="${S.xt===t[0]}">${t[1]}</button>`).join('')}</div>`;
- const body=S.xt==='subj'?`${mascot('cloud','듣고 싶은 과목을 골라 봐! 어울리는 학과를 알려 줄게.')}${subjPick()}<div style="margin-top:6px"><button class="btn ghost sm" data-a="xclear">선택 지우기</button></div><div id="xres">${subjResult()}</div>`:S.xt==='khu'?khuView():S.xt==='plan'?planView():S.xt==='dict'?dictView():S.xt==='credit'?creditView():S.xt==='jc'?jcView():guideView();
+ const body=S.xt==='subj'?`${mascot('cloud','듣고 싶은 과목을 골라 봐! 어울리는 학과를 알려 줄게.')}${subjPick()}<div style="margin-top:6px"><button class="btn ghost sm" data-a="xclear">선택 지우기</button></div><div id="xres">${subjResult()}</div>`:S.xt==='naver'?nvView():S.xt==='khu'?khuView():S.xt==='plan'?planView():S.xt==='dict'?dictView():S.xt==='credit'?creditView():S.xt==='jc'?jcView():guideView();
  return `${NOTICE}<section class="panel"><h2>교과 선택·학과 안내</h2><p class="lead">관심 분야에서 어떤 학과를 배우고, 그러려면 고등학교에서 어떤 과목을 고르면 좋은지 알려 줘요. 학과별 추천 과목은 강원특별자치도교육청 「고교학점제를 위한 진로·학업 설계 안내서」와 광주광역시교육청 「2026 진로 연계 과목 선택을 위한 학과안내서」를 바탕으로 했어요.</p>${tabs}${body}</section>
  <div class="callout">추천 과목은 참고용이에요. 학교마다 개설 과목이 다르니 지원할 학교의 교육과정 편제표를 확인하고, 선생님과 상담해서 정하세요.</div>`;
 }
@@ -1778,6 +1784,87 @@ function vSpecial(){
  <div class="panel soft"><h3>전체 학교는 여기서 찾아요</h3><p class="lead" style="font-size:14px">이 목록은 위키백과와 나이스(NEIS) 학교기본정보 등을 바탕으로 정리한 대표 학교예요. 지정·운영 현황은 해마다 바뀌니 공식 사이트에서 확인하세요.</p>
  <div class="row">${ext(nv((S.sr==='all'?'':S.sr+' ')+T.q+' 모집요강'),'“'+(S.sr==='all'?'':S.sr+' ')+T.q+'” 검색',' ')}${ext('https://www.schoolinfo.go.kr','학교알리미')}${ext('https://www.hischool.go.kr/entrance/search.do?type=HSA02&detailtype=HSB06','고입정보포털 학교정보')}${reg?ext(reg[1],reg[0]):''}</div></div>`;
 }
+
+/* 홀랜드(RIASEC) 흥미 유형별 추천 직업·학과 */
+const HOL={
+ R:{ico:'🔧',tr:['도구·기계를 다루고 직접 만들어 보는 일이 편해요','결과물이 눈에 보이는 실습·체험이 좋아요','말보다 행동으로 해결하는 편이에요'],
+  jobs:['기계·자동차 정비사','전기·전자 기술자','항공정비사','건축·토목 기술자','로봇·드론 엔지니어','농업·스마트팜 전문가','조리사·제과제빵사','소방관·경찰관','운동선수·체육지도자'],
+  majors:['기계공학','전기공학','전자공학','건축학','토목공학','항공','자동차공학','스마트팜','조리','체육'],
+  fields:['industry','auto','construction','agri','transport'],
+  subj:'수학, 물리학, 기술·가정, 정보',
+  tip:'메이커·로봇·정비 동아리와 실습 체험 활동이 잘 맞아요. 관련 기능사 자격증을 미리 알아보면 직업계고·마이스터고 진로에도 도움이 돼요.'},
+ I:{ico:'🔬',tr:['궁금한 것을 끝까지 파고들어 원리를 알아내요','수학·과학 문제나 코딩 같은 논리 활동이 즐거워요','혼자 깊이 생각하고 연구하는 시간이 좋아요'],
+  jobs:['과학자·연구원','데이터 과학자','AI·소프트웨어 개발자','의사·약사·수의사','생명공학 연구원','환경·천문 연구원','정보보안 전문가','반도체 연구·설계 엔지니어'],
+  majors:['물리학','화학','생명과학','수학','통계','컴퓨터공학','인공지능','의학','약학','환경공학'],
+  fields:['it','robot','bio'],
+  subj:'수학, 물리학, 화학, 생명과학, 정보',
+  tip:'탐구 동아리, 과학·수학 체험, 코딩 프로젝트로 탐구 경험을 쌓아요. 과학고·영재학교, 일반고의 이과 선택과목, 소프트웨어·반도체 마이스터고가 잘 어울릴 수 있어요.'},
+ A:{ico:'🎨',tr:['나만의 방식으로 표현하고 새로운 것을 만드는 일이 즐거워요','정해진 답이 없는 자유로운 과제가 좋아요','감수성이 풍부하고 아이디어가 많아요'],
+  jobs:['시각·제품·패션 디자이너','웹툰·일러스트 작가','영상·방송 PD','작곡가·음악가','배우·연출가','작가·시나리오 작가','건축가','게임 그래픽 디자이너','사진작가'],
+  majors:['시각디자인','산업디자인','실용음악','영상','연극영화','문예창작','애니메이션','패션디자인','건축학'],
+  fields:['design','beauty'],
+  subj:'미술, 음악, 국어(문학·작문), 영상·미디어 관련 과목',
+  tip:'작품과 활동을 포트폴리오로 모아 두세요. 예술고, 디자인·미디어 특성화고, 일반고의 예체능 선택과목을 살펴볼 수 있어요.'},
+ S:{ico:'🤝',tr:['사람의 이야기를 잘 들어주고 돕는 일에 보람을 느껴요','가르치거나 돌보는 활동이 즐거워요','모둠 활동에서 친구들을 챙기는 편이에요'],
+  jobs:['교사·특수교사','상담사·심리치료사','사회복지사','간호사','물리치료사·작업치료사','보육교사','청소년지도사','치위생사·보건 전문가'],
+  majors:['교육학','초등교육','유아교육','사회복지','심리학','간호학','물리치료','청소년','특수교육'],
+  fields:['care'],
+  subj:'생명과학, 사회·문화, 심리, 교육학, 보건 관련 과목',
+  tip:'봉사·멘토링·학급 도우미 활동의 경험이 도움이 돼요. 보건·복지·돌봄 분야의 특성화고나 일반고의 사회·보건 선택과목을 살펴볼 수 있어요.'},
+ E:{ico:'🎤',tr:['앞장서서 이끌고 사람들을 설득하는 일이 즐거워요','발표·토론·행사 기획에 자신이 있어요','새로운 일을 시작하고 도전하는 것을 좋아해요'],
+  jobs:['경영자·창업가','마케터·광고기획자','변호사·판사 등 법조인','기자·방송인','외교관·정치인','공무원(행정)','영업·상품기획자','승무원·호텔리어'],
+  majors:['경영학','법학','정치외교','신문방송','국제통상','행정학','광고홍보','호텔경영'],
+  fields:['biz','tour'],
+  subj:'정치와 법, 경제, 사회·문화, 국어(화법·작문), 영어',
+  tip:'학급 임원, 토론·발표 대회, 행사 기획, 창업 체험에 도전해 보세요. 일반고의 사회계열 선택과목, 외고·국제고, 금융·관광 분야 특성화고를 살펴볼 수 있어요.'},
+ C:{ico:'📊',tr:['정확하고 꼼꼼하게 정리하고 관리하는 일이 편해요','계획을 세워 순서대로 하면 마음이 편해요','숫자와 자료를 다루는 일이 잘 맞아요'],
+  jobs:['회계사·세무사','은행원·금융 사무직','공무원','데이터·정보 관리자','물류·유통 관리자','사서','감정평가사','보험·재무 관리자'],
+  majors:['회계','세무','금융','경영정보','행정학','빅데이터','물류','문헌정보'],
+  fields:['biz'],
+  subj:'수학, 경제, 정보, 영어, 사회',
+  tip:'학급 회계·서기, 정리 노트, 자격증(전산회계 등) 준비가 도움이 돼요. 금융·회계·경영 분야 특성화고와 일반고의 경제·수학 선택과목을 살펴볼 수 있어요.'}};
+const HOLO='RIASEC'.split('');
+function holView(){
+ const p=pcts(),tt=topTraits();
+ const sel=HOL[S.ht]?S.ht:tt[0];
+ const H=HOL[sel],R=RI[sel];
+ const order=tt.concat([]);
+ const code=tt[0]+tt[1];
+ return `<section class="panel"><h2>내 흥미 유형별 추천 직업·학과</h2>
+ <p class="lead">나의 홀랜드 유형 코드는 <b>${code}</b> (${RI[tt[0]].n} + ${RI[tt[1]].n})예요. 가장 높은 두세 유형을 함께 보면 어울리는 직업과 학과를 넓게 찾을 수 있어요. 유형을 눌러 확인해 보세요.</p>
+ <div class="tabs wrapt" role="group" aria-label="흥미 유형">${order.map((k,i)=>`<button data-a="holt" data-v="${k}" aria-pressed="${sel===k}">${HOL[k].ico} ${RI[k].n}${i<2?` <small>${i+1}순위</small>`:''}</button>`).join('')}</div>
+ <div id="holbody" class="rec"><h3>${H.ico} ${R.n} <span class="tag acc">${p[sel]}점</span></h3><p class="lead" style="font-size:14px">${R.h}</p>
+  <h4>이런 특징이 있어요</h4>${ul(H.tr)}
+  <h4>어울리는 직업 예시</h4><div class="row">${H.jobs.map(j=>`<a class="chip" href="${nv(j+' 하는 일')}" target="_blank" rel="noopener">${esc(j)}</a>`).join('')}</div>
+  <h4>관련 대학 학과 <span class="tag">누르면 대학·학과 찾기로 이동</span></h4><div class="row">${H.majors.map(m=>`<button class="chip" data-a="udept" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>
+  <h4>고교에서 살펴볼 분야</h4><div class="row">${H.fields.map(f=>FI[f]?`<button class="chip" data-a="findf" data-v="${f}">${esc(FI[f].n.split('(')[0])}</button>`:'').join('')}</div>
+  <p><b>도움이 되는 고교 선택과목</b>: ${H.subj}</p>
+  <div class="callout">${H.tip}</div>
+  <div class="row"><button class="btn sm" data-a="go" data-v="subj">교과 선택·학과 안내 보기</button><button class="btn ghost sm" data-a="go" data-v="univ">대학·학과 찾기</button>${ext('https://www.career.go.kr','커리어넷에서 직업 더 알아보기')}</div>
+ </div>
+ <p class="mut" style="font-size:12px">직업·학과는 대표 예시예요. 흥미 유형은 한 가지만 맞는 것이 아니라 여러 유형이 섞여 있어요. 학교와 학과 이름은 대학마다 달라서 비슷한 이름도 함께 찾아보세요.</p></section>`;
+}
+
+/* 네이버 에듀 선택과목 가이드 연결 (외부 사이트는 다른 사이트 안에 넣을 수 없어 새 창으로 열어요) */
+const NVU='https://edu.naver.com/subjects-guide';
+const nvUrl=q=>{q=(q||'').trim();return NVU+(q?'?q='+encodeURIComponent(q):'')};
+const NVEX=[['인문',['국어국문학','영어영문학','철학','사학','중어중문학','문헌정보']],['사회',['경영학','법학','경제학','심리학','행정학','사회복지학','정치외교','신문방송']],['교육',['국어교육','수학교육','영어교육','초등교육','유아교육','특수교육']],['자연',['수학','물리학','화학','생명과학','통계학','지구과학']],['공학',['컴퓨터공학','기계공학','전기전자','건축학','산업공학','화학공학']],['의약',['의학','간호학','약학','치의학','물리치료','수의학']],['예체능',['시각디자인','실용음악','체육','연극영화','무용','미술']]];
+function nvView(){
+ return `${mascot('cloud','더 넓은 학과를 보고 싶다면 네이버 에듀 가이드를 같이 써 봐!')}
+ <div class="callout acc"><b>경희대 자료는 자연계열만 있어요.</b> 인문·사회·교육·예체능·의약까지 모든 계열의 추천 과목을 보려면 <b>네이버 에듀 “선택과목 가이드”</b>에서 학과별 추천과목을 찾아보세요.</div>
+ <div class="rec"><h3>네이버 에듀 선택과목 가이드</h3>
+ ${ul(['<b>학과별 추천과목</b>: 총 304개 학과의 추천 과목을 볼 수 있어요. (공학 62 · 교육 38 · 사회 47 · 예체능 49 · 의약 19 · 인문 44 · 자연 45학과)','<b>과목 살펴보기</b>: 과목을 기준으로 어떤 학과에 도움이 되는지도 찾아볼 수 있어요.','<b>고교학점제 이해</b>: 과목 선택, 3년간 이수 계획, 졸업 기준(3년간 192학점)도 설명해 줘요.','일반고 과목 기준이고, 예체능은 예술·체육 전공 과목을 포함하며 특성화고 과목과 학교 자체 개설 과목은 제외돼요. (2022 개정 교육과정)'])}
+ <div class="row">${ext(NVU,'학과별 추천과목 보기',' ')}${ext(NVU+'?tab=subjects','과목으로 살펴보기')}</div></div>
+ <h3>학과 이름으로 바로 찾기</h3>
+ <div class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px"><label for="nvq">궁금한 학과 이름</label><input class="sel" id="nvq" type="search" placeholder="예: 컴퓨터공학, 간호학, 경영학, 국어교육" autocomplete="off"></div>
+ <a class="btn" id="nvgo" href="${NVU}" target="_blank" rel="noopener">네이버 에듀에서 찾기 <span aria-hidden="true">↗</span></a></div>
+ <p class="mut" style="font-size:13px">학과 이름을 쓰고 버튼을 누르면 네이버 에듀 선택과목 가이드가 검색된 상태로 새 창에서 열려요.</p>
+ <h3>계열별로 많이 찾는 학과</h3>
+ ${NVEX.map(g=>`<div class="row"><b style="min-width:3.5em">${g[0]}</b>${g[1].map(n=>`<a class="chip" href="${nvUrl(n)}" target="_blank" rel="noopener">${n}</a>`).join('')}</div>`).join('')}
+ <h3>이렇게 활용해요</h3>
+ ${ol(['희망하는 학과를 이 앱의 “대학·학과 찾기”나 “흥미·적성 결과”에서 골라요.','네이버 에듀 가이드에서 그 학과의 <b>추천과목</b>을 확인해요.','추천과목을 <button class="btn ghost sm" data-a="xtab" data-v="plan">나의 학업설계서</button>에 적어 보세요.','지원하려는 고등학교의 <b>교육과정 편성표</b>(학교알리미, 학교 홈페이지, 경기 고교 교육과정)에서 그 과목이 개설되는지 확인해요.','대학마다 권장하는 과목이 다를 수 있으니, 가고 싶은 대학의 <b>전공 권장과목 안내</b>도 함께 확인해요. (예: 경희대 자연계열 표는 “경희대 권장과목” 탭)'])}
+ <p class="mut" style="font-size:12px">네이버 에듀는 이 앱과 별개의 외부 사이트라 안의 내용을 이 앱에서 직접 보여 줄 수 없어요. 추천과목은 참고 자료이고, 학교마다 개설 과목이 다르니 학교 자료와 대학 모집요강으로 꼭 확인하세요.</p>`;
+}
 /* ---------- 로그인 · 포트폴리오 · 관리자 ---------- */
 // 구글 앱스스크립트 웹앱 주소를 넣으면 모든 학생의 기록이 구글 시트에 모여요. 비워 두면 이 기기에만 저장돼요(체험 모드).
 const CONFIG={api:'https://script.google.com/macros/s/AKfycbwV63K71aIRuPxf57kPqGIIS8TQMPN47koMtcEIxDWwmjaFSjQjZr65kwrl2bVtjaIypw/exec'};
@@ -1986,6 +2073,7 @@ document.addEventListener('click',e=>{
  if(a==='sgfind'){S.fm='vo';S.fk='all';S.ff='all';S.fs='all';S.fr='all';S.fe='all';S.fx='all';S.fq='성일정보고';closeModal();save();go('schools');return}
  if(a==='toGG'){closeModal();S.fm='gg';save();go('schools');return}
  if(a==='gtab'){S.gt=v;save();const r=$('#gres');if(r){r.innerHTML=genRegionList();document.querySelectorAll('[data-a=gtab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v))}else render(false);return}
+ if(a==='holt'){S.ht=v;save();render(false);return}
  if(a==='grpgo'){const m={sci:'science',for:'foreign',art:'arts'};if(m[v]){S.fm='sp';S.sp=m[v];S.sk='all'}else if(v==='gn'){if(S.fm!=='gen'&&S.fm!=='rural'&&!(S.fm==='sp'&&(S.sp==='private'||S.sp==='autonomous_public')))S.fm='gen'}else S.fm=v;save();render(false);return}
  if(a==='grpsp'){S.fm='sp';S.sp=v;S.sk='all';save();render(false);return}
  if(a==='spsub'){S.sk=v;save();render(false);return}
@@ -2033,12 +2121,12 @@ document.addEventListener('click',e=>{
  if(a==='adm-csv'){admCsv();return}
  if(a==='close'){closeModal();return}
  if(a==='grade'){S.grade=+v;S.rg=+v}
- else if(a==='ans')S.ans[+el.dataset.i]=+v;
+ else if(a==='ans'){migLv();S.ans[+el.dataset.i]=+v}
  else if(a==='pref')S.pref[el.dataset.k]=v;
  else if(a==='chip'){const i=S.chips.indexOf(v);if(i>=0)S.chips.splice(i,1);else if(S.chips.length<3)S.chips.push(v);else toast('관심 분야는 최대 3개까지 고를 수 있어요')}
  else if(a==='next'){if(S.step===QP+3){S.done=true;S.redo=false;S.type=null;S.step=0;save();go('result');return}S.step++;save();render(true);return}
  else if(a==='prev'){S.step--;save();render(true);return}
- else if(a==='redo'){S.redo=true;S.step=0;S.ans={};S.chips=[];S.pref={};S.done=false;S.type=null;save();go('start');return}
+ else if(a==='redo'){S.redo=true;S.step=0;S.ans={};S.lv=2;S.chips=[];S.pref={};S.done=false;S.type=null;save();go('start');return}
  else if(a==='pick'){S.type=v;save();go('detail');return}
  else if(a==='pickf'){const f=FI[v];S.field=v;S.type=f.meister&&rank().find(x=>x.id==='meister').sc>=rank().find(x=>x.id==='vocational').sc?'meister':'vocational';save();go('detail');return}
  else if(a==='type'||a==='rtype'){S.type=v;if(a==='type')qi=0}
@@ -2073,6 +2161,7 @@ document.addEventListener('input',e=>{
  else if(e.target.id==='memo'){S.note=e.target.value;save()}
  else if(e.target.id==='sid'){e.target.value=e.target.value.replace(/\D/g,'').slice(0,5)}
  else if(e.target.id==='rq'){S.rq=e.target.value;save();const r=$('#rres');if(r)r.innerHTML=ruralList()}
+ else if(e.target.id==='nvq'){const a=$('#nvgo');if(a)a.href=nvUrl(e.target.value)}
  else if(e.target.id==='uq'){S.uq=e.target.value;save();const r=$('#ures');if(r)r.innerHTML=S.ut==='univ'?uResults():S.ut==='rate'?uRates():uDict()}
  else if(e.target.dataset&&e.target.dataset.pl!==undefined){S.plan=S.plan||{};S.plan[e.target.dataset.pl]=e.target.value;save()}
  else if(e.target.id==='aq'){AQ=e.target.value;const l=$('#alist');if(l)l.innerHTML=adminList()}
