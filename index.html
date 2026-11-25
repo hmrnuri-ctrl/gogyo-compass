@@ -311,7 +311,7 @@ const PQ=[
  {k:'p12',q:'하고 싶은 일(진로)은 얼마나 정해졌나요?',o:[['clear','꽤 구체적으로 있어요'],['vague','대략적인 분야만 있어요'],['none','아직 전혀 모르겠어요']]},
  {k:'p13',q:'고등학교에 들어가서 가장 걱정되는 것은?',o:[['comp','학교 안에서의 내신 경쟁'],['study','어려워지는 공부 내용'],['far','먼 통학이나 기숙사 생활'],['none','특별한 걱정은 없어요']]}];
 const COMPET=['private','science','foreign'];
-const compAverse=()=>S.pref.p5==='burden'||S.pref.p8==='burden';
+const compAverse=()=>S.pref.p5==='burden'||S.pref.p8==='burden'||textBurden();
 
 const ADJ={
  general:{p1:{college:10,mix:8,job:-10,unk:5},p2:{theory:8,practice:-5,art:-8},p5:{burden:10,ok:3,like:-2},p8:{burden:8,ok:2,like:-2},p9:{calm:8,balance:6,drive:-1},p10:{light:8,normal:5,heavy:0},p11:{friend:6,club:5,grade:2,skill:-6},p12:{none:8,vague:5,clear:0},p13:{comp:6,study:3,far:4,none:0}},
@@ -608,7 +608,7 @@ const nv=q=>'https://search.naver.com/search.naver?query='+encodeURIComponent(q)
 const ext=(u,t,c)=>`<a class="btn ${c||'ghost'} sm" href="${u}" target="_blank" rel="noopener">${t}<span aria-hidden="true">↗</span></a>`;
 
 /* ---------- 계산 ---------- */
-function pcts(){migLv();const s={},n={};Q.forEach((q,i)=>{const v=S.ans[i];if(v){s[q[0]]=(s[q[0]]||0)+v;n[q[0]]=(n[q[0]]||0)+1}});const o={};'RIASEC'.split('').forEach(k=>{o[k]=n[k]?Math.round((s[k]/n[k]-1)/4*100):0});return o}
+function pcts(){migLv();const s={},n={};Q.forEach((q,i)=>{const v=S.ans[i];if(v){s[q[0]]=(s[q[0]]||0)+v;n[q[0]]=(n[q[0]]||0)+1}});const o={};'RIASEC'.split('').forEach(k=>{o[k]=n[k]?Math.round((s[k]/n[k]-1)/4*100):0});const tb=textBonus();for(const k in tb)o[k]=Math.min(100,o[k]+tb[k]);return o}
 function rank(){
  const p=pcts(),c=S.chips,out=[];
  const fchips=c.filter(x=>FI[x]);
@@ -618,6 +618,7 @@ function rank(){
   for(const k in a){const v=S.pref[k];if(v&&a[k][v]!==undefined){const d=a[k][v];sc+=d;const lab=PQ.find(x=>x.k===k).o.find(o=>o[0]===v)[1];if(d>=8)pos.push('“'+lab+'” 응답과 잘 맞아요');else if(d<=-10)neg.push('“'+lab+'” 응답과는 거리가 있어요')}}
   let bonus=0;
   if(id==='science'&&c.includes('sci'))bonus+=8;
+  {const tt=textAnalysis().types;if(id==='science')bonus+=Math.min(8,(tt.science||0)*4);if(id==='foreign')bonus+=Math.min(8,(tt.foreign||0)*4);if(id==='arts')bonus+=Math.min(10,(tt.arts||0)*5);if(id==='meister')bonus+=Math.min(4,(tt.meister||0)*2);if(id==='vocational')bonus+=Math.min(4,(tt.vocational||0)*2)}
   if(id==='private'&&c.includes('sci'))bonus+=2;
   if(id==='foreign'&&c.includes('lang'))bonus+=10;
   if(id==='arts'&&c.includes('art'))bonus+=12;
@@ -634,7 +635,7 @@ function rank(){
 }
 function fieldRank(only){
  const p=pcts();
- return FIELDS.filter(f=>!only||f.meister).map(f=>{let n=0,d=0;for(const k in f.tr){n+=f.tr[k]*p[k];d+=f.tr[k]}let sc=n/d+(S.chips.includes(f.id)?25:0);return{f,sc:Math.max(5,Math.min(98,Math.round(sc)))}}).sort((a,b)=>b.sc-a.sc);
+ return FIELDS.filter(f=>!only||f.meister).map(f=>{let n=0,d=0;for(const k in f.tr){n+=f.tr[k]*p[k];d+=f.tr[k]}let sc=n/d+(S.chips.includes(f.id)?25:0)+Math.min(20,(textAnalysis().fields[f.id]||[]).length*8);return{f,sc:Math.max(5,Math.min(98,Math.round(sc)))}}).sort((a,b)=>b.sc-a.sc);
 }
 const curType=()=>S.type||(S.done?rank()[0].id:'general');
 function topTraits(){const p=pcts();return Object.keys(p).sort((a,b)=>p[b]-p[a])}
@@ -653,7 +654,7 @@ function vStart(){
   return `${NOTICE}<section class="panel"><h1>검사를 마쳤어요</h1><p class="lead">가장 잘 맞는 유형은 <b>${TYPES[r.id].name}</b>이에요. 결과를 보고 세부 선택으로 이어 가거나, 다시 검사해 볼 수 있어요.</p>
   <div class="row"><button class="btn" data-a="go" data-v="result">결과 보기</button><button class="btn ghost" data-a="redo">처음부터 다시 검사하기</button></div></section>`;
  }
- migLv();const steps=QP+4,st=S.step,pg=Math.round(st/(steps-1)*100);
+ migLv();const steps=QP+5,st=S.step,pg=Math.round(st/(steps-1)*100);
  let body='';
  if(st===0){
   body=`<h1>나에게 맞는 고등학교,<br>중1부터 찾아볼까요?</h1>
@@ -665,13 +666,16 @@ function vStart(){
   body=`<h2>나는 이런 사람이에요 <span class="tag">${st}/${QP}</span></h2><p class="lead">얼마나 그런지 솔직하게 골라 주세요. 정답은 없어요.</p>`+
   Q.slice(from,from+6).map((q,j)=>{const i=from+j;return `<div class="q"><p><b>${i+1}.</b> ${q[1]}</p><div class="likert" role="group" aria-label="문항 ${i+1}">${LK.map((l,v)=>`<button data-a="ans" data-i="${i}" data-v="${v+1}" aria-pressed="${S.ans[i]===v+1}">${l}</button>`).join('')}</div></div>`}).join('');
  }else if(st===QP+1){
+  const T=S.tx||{};
+  body=`<h2>나를 말로 표현해 봐요 <span class="tag">선택</span></h2><p class="lead">숫자로 고르는 문항 말고, 내 생각을 짧게 써 보세요. 쓴 글에서 좋아하는 활동과 바람을 찾아 결과에 반영해요. 비워 두고 넘어가도 괜찮아요.</p>`+TXP.map(q=>`<div class="field"><label for="tx-${q[0]}">${q[1]}</label><textarea class="sel" id="tx-${q[0]}" data-tx="${q[0]}" maxlength="200" rows="3" placeholder="${q[2]}">${esc(T[q[0]]||'')}</textarea></div>`).join('')+`<p class="mut" style="font-size:12px">쓴 내용은 이 기기에만 저장되고 선생님께 전송되지 않아요. 한 칸에 200자까지 쓸 수 있어요.</p>`;
+ }else if(st===QP+2){
   body=`<h2>관심 있는 분야를 골라 보세요</h2><p class="lead">최대 3개까지 고를 수 있어요. 고르지 않아도 괜찮아요.</p><div class="row">${INT.map(c=>`<button class="chip" data-a="chip" data-v="${c.id}" aria-pressed="${S.chips.includes(c.id)}">${c.n}</button>`).join('')}</div>`;
  }else{
-  const pp=st===QP+2?PQ.slice(0,6):PQ.slice(6);
-  body=`<h2>나의 상황과 바람 <span class="tag">${st-QP-1}/2</span></h2><p class="lead">학교 유형을 고를 때 중요한 조건이에요. 경쟁이 부담되는지, 어떤 분위기가 편한지도 솔직하게 알려 주세요.</p>`+pp.map(q=>`<div class="q"><p><b>${q.q}</b></p><div class="opts">${q.o.map(o=>`<button class="opt" data-a="pref" data-k="${q.k}" data-v="${o[0]}" aria-pressed="${S.pref[q.k]===o[0]}">${o[1]}</button>`).join('')}</div></div>`).join('');
+  const pp=st===QP+3?PQ.slice(0,6):PQ.slice(6);
+  body=`<h2>나의 상황과 바람 <span class="tag">${st-QP-2}/2</span></h2><p class="lead">학교 유형을 고를 때 중요한 조건이에요. 경쟁이 부담되는지, 어떤 분위기가 편한지도 솔직하게 알려 주세요.</p>`+pp.map(q=>`<div class="q"><p><b>${q.q}</b></p><div class="opts">${q.o.map(o=>`<button class="opt" data-a="pref" data-k="${q.k}" data-v="${o[0]}" aria-pressed="${S.pref[q.k]===o[0]}">${o[1]}</button>`).join('')}</div></div>`).join('');
  }
  let ok=true;
- if(st===0)ok=!!S.grade;else if(st>=1&&st<=QP)ok=Q.slice((st-1)*6,st*6).every((q,j)=>S.ans[(st-1)*6+j]);else if(st>QP+1)ok=(st===QP+2?PQ.slice(0,6):PQ.slice(6)).every(q=>S.pref[q.k]);
+ if(st===0)ok=!!S.grade;else if(st>=1&&st<=QP)ok=Q.slice((st-1)*6,st*6).every((q,j)=>S.ans[(st-1)*6+j]);else if(st>QP+2)ok=(st===QP+3?PQ.slice(0,6):PQ.slice(6)).every(q=>S.pref[q.k]);
  return `${NOTICE}<section class="panel"><div class="prog" role="progressbar" aria-valuenow="${pg}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pg}%"></i></div>${body}
  <div class="row" style="justify-content:space-between">${st>0?'<button class="btn ghost" data-a="prev">이전</button>':'<span></span>'}
  <button class="btn" data-a="next" ${ok?'':'disabled'}>${st===steps-1?'결과 보기':'다음'}</button></div>${ok?'':'<p class="warn">모든 문항에 답하면 다음으로 넘어갈 수 있어요.</p>'}</section>`;
@@ -690,7 +694,7 @@ function vResult(){
   <p class="lead">${RI[tt[0]].n} 성향이 가장 높고, 이어서 ${RI[tt[1]].n} 성향이 높아요. <b>${RI[tt[0]].h}</b> 타입에 가까운 모습이에요${p[tt[0]]-p[tt[2]]<15?'. 상위 성향의 차이가 크지 않아 여러 분야가 두루 맞을 수 있어요':''}.</p>
   <div style="display:flex;flex-direction:column;gap:8px">${bars}</div>
   <div class="callout">0~100점은 이 간이 검사 안에서의 상대적 위치예요. 더 정확한 검사는 교육부 <a href="https://www.career.go.kr" target="_blank" rel="noopener">커리어넷</a>의 직업흥미검사·진로적성검사로 확인해 보세요.</div></section>
-${holView()}
+${textInsight()}${holView()}
   <section class="panel"><h2>추천 고등학교 유형</h2>${compAverse()?'<div class="callout acc"><b>경쟁이 부담된다고 답해서</b> 과학고·외고·자사고처럼 경쟁이 높은 학교는 추천에서 뒤로 두고, 일반고를 먼저 살펴보도록 했어요. 그래도 관심이 있다면 “다른 유형 점수 보기”나 “고교 유형 살펴보기”에서 직접 확인할 수 있어요.</div>':''}<div class="grid">${r.slice(0,3).map(rc).join('')}</div>
   <details><summary style="cursor:pointer;font-weight:700">다른 유형 점수 보기</summary><div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">${r.slice(3).map(x=>`<div class="bar" style="grid-template-columns:9em 1fr 3em"><span>${TYPES[x.id].name}</span><div class="tr"><i style="width:${x.sc}%"></i></div><em>${x.sc}</em></div>`).join('')}</div></details></section>
   <section class="panel soft"><h3>직업계고를 고민한다면, 이런 분야가 어울려요</h3><div class="grid">${fr.map(x=>`<div class="rec"><h3>${x.f.n}</h3><p class="lead" style="font-size:13px">${x.f.d}</p>${meter(x.sc)}<p class="mut" style="font-size:13px">연계 대학 학과 취업률: ${uniRateTxt(x.f.id)}</p><div class="row"><button class="btn ghost sm" data-a="pickf" data-v="${x.f.id}">분야 자세히 보기</button><button class="btn ghost sm" data-a="toU" data-v="${x.f.id}">대학 학과 보기</button></div></div>`).join('')}</div></section>
@@ -1785,6 +1789,46 @@ function vSpecial(){
  <div class="row">${ext(nv((S.sr==='all'?'':S.sr+' ')+T.q+' 모집요강'),'“'+(S.sr==='all'?'':S.sr+' ')+T.q+'” 검색',' ')}${ext('https://www.schoolinfo.go.kr','학교알리미')}${ext('https://www.hischool.go.kr/entrance/search.do?type=HSA02&detailtype=HSB06','고입정보포털 학교정보')}${reg?ext(reg[1],reg[0]):''}</div></div>`;
 }
 
+/* 서술형 문항: 학생이 쓴 글에서 흥미 키워드를 찾아 성향 점수에 반영해요 (간단한 낱말 찾기 방식) */
+const TXP=[
+ ['a','요즘 가장 즐겁게 하는 활동이나 좋아하는 것은 무엇인가요?','예: 쉬는 시간에 코딩으로 게임을 만들어 보는 게 제일 재미있어요.'],
+ ['b','내가 잘한다고 생각하는 점이나 친구들이 자주 해 주는 말은 무엇인가요?','예: 친구들 고민을 잘 들어준다는 말을 자주 들어요.'],
+ ['c','앞으로 하고 싶은 일이나 되고 싶은 모습, 고등학교에서 바라는 점을 써 주세요.','예: 경쟁이 심하지 않고 내 속도로 공부할 수 있는 학교에 가고 싶어요.']];
+const TXK={
+ R:['만들','조립','기계','수리','고치','정비','요리','제빵','바리스타','운동','체육','축구','농구','자동차','드론','건축','공구','실습','농사','캠핑','동물','로봇','전기','용접','목공'],
+ I:['실험','과학','수학','연구','코딩','프로그래','탐구','호기심','분석','원리','컴퓨터','의사','과학자','알고리즘','물리','화학','생물','논리','퍼즐','AI','인공지능'],
+ A:['그림','노래','춤','음악','디자인','만화','웹툰','영상','글쓰기','소설','연기','사진','창작','작곡','악기','미술','무용','연극','상상','패션','유튜브','드라마'],
+ S:['도와','돕','가르치','봉사','상담','고민을 들','선생님','간호','돌봄','배려','친구를 도','아이들','복지','공감','위로','보육'],
+ E:['리더','이끌','발표','토론','설득','창업','회장','사업','정치','판매','기획','경영','도전','CEO','변호사','외교','임원','행사','사장'],
+ C:['정리','계획','꼼꼼','숫자','회계','은행','규칙','기록','공무원','체계','일정','계산','세무','금융','문서','시간표','분류']};
+const TXF={industry:['기계','전기','전자','공구','용접'],auto:['자동차','정비'],construction:['건축','건설','토목','설계'],agri:['농사','농업','식물','동물','스마트팜'],food:['요리','제빵','바리스타','식품','조리'],beauty:['미용','메이크업','헤어','네일','뷰티'],it:['코딩','프로그래','게임','해킹','정보보안','앱','컴퓨터'],robot:['로봇','드론','반도체','AI','인공지능'],design:['디자인','웹툰','영상','만화','애니','그림'],biz:['회계','은행','금융','경영','사업','창업','세무'],tour:['여행','승무원','호텔','관광','항공'],care:['간호','돌봄','복지','보육','상담','치료'],transport:['비행','항공','철도','선박','기관사','조종'],defense:['경찰','소방','군인','부사관','안전'],bio:['화학','환경','바이오','생명','약','실험']};
+const TXT_BURDEN=/경쟁.{0,6}(싫|부담|스트레스|힘들|피하|없)|(성적|순위|등수).{0,8}(스트레스|부담|싫)|여유롭|내 속도|느긋|편안한 (학교|분위기)/;
+function txtAll(){const t=S.tx||{};return ['a','b','c'].map(k=>String(t[k]||'')).join(' ').trim()}
+const txtHas=(t,w)=>t.toLowerCase().includes(w.toLowerCase());
+function textAnalysis(){
+ const t=txtAll();const out={t,hits:{},fields:{},burden:false,types:{}};
+ if(t.length<2)return out;
+ for(const k in TXK){const h=TXK[k].filter(w=>txtHas(t,w));if(h.length)out.hits[k]=h}
+ for(const f in TXF){const h=TXF[f].filter(w=>txtHas(t,w));if(h.length)out.fields[f]=h}
+ out.burden=TXT_BURDEN.test(t);
+ const has=(a)=>a.filter(w=>txtHas(t,w)).length;
+ out.types={science:has(['과학','수학','실험','연구','탐구','영재']),foreign:has(['영어','외국어','통역','번역','외교','중국어','일본어']),arts:has(['그림','음악','춤','연기','노래','작곡','미술','무용','연극','악기']),meister:has(['자격증','기술','취업','기능','반도체','전기','로봇']),vocational:has(['자격증','취업','기술','실습'])};
+ return out;
+}
+const textBonus=()=>{const a=textAnalysis(),b={};for(const k in a.hits)b[k]=Math.min(18,a.hits[k].length*6);return b};
+const textBurden=()=>textAnalysis().burden;
+function textInsight(){
+ const a=textAnalysis();
+ if(!a.t)return `<section class="panel soft"><h3>내가 쓴 글 반영</h3><p class="lead" style="font-size:14px">서술형 문항을 쓰면 그 내용도 결과에 반영돼요. 쓰고 싶다면 “다시 검사하기”에서 서술형 단계를 채워 보세요.</p></section>`;
+ const rows=Object.keys(a.hits).map(k=>`<li><b>${RI[k].n}</b>: ${a.hits[k].map(w=>`“${esc(w)}”`).join(', ')} → +${Math.min(18,a.hits[k].length*6)}점</li>`);
+ return `<section class="panel soft"><h3>내가 쓴 글에서 읽은 내용</h3>
+ <blockquote class="callout" style="white-space:pre-wrap;margin:0">${esc(a.t)}</blockquote>
+ ${rows.length?`<p class="lead" style="font-size:14px">글에서 아래 낱말이 보여서 해당 유형 점수에 더했어요.</p><ul class="list">${rows.join('')}</ul>`:'<p class="lead" style="font-size:14px">찾은 흥미 낱말이 없어서 점수에는 더하지 않았어요. 좋아하는 활동을 더 구체적으로 써 보면 반영돼요.</p>'}
+ ${a.burden?'<p class="lead" style="font-size:14px">“경쟁이 부담된다”는 뜻이 보여서 경쟁이 높은 학교는 추천에서 뒤로 두었어요.</p>':''}
+ ${Object.keys(a.fields).length?`<p class="lead" style="font-size:14px">관련 분야: ${Object.keys(a.fields).map(f=>`<span class="tag">${esc(FI[f]?FI[f].n.split('(')[0]:f)}</span>`).join(' ')} (직업계고 분야 추천에 반영)</p>`:''}
+ <p class="mut" style="font-size:12px">쓴 글에서 흥미 낱말을 찾아 점수에 더하는 간단한 방식이에요. “싫어요”처럼 부정하는 표현은 구분하지 못할 수 있고, 한 유형당 최대 18점까지만 더해요. 쓴 내용은 이 기기에만 저장되고 선생님께 전송되지 않아요.</p></section>`;
+}
+
 /* 홀랜드(RIASEC) 흥미 유형별 추천 직업·학과 */
 const HOL={
  R:{ico:'🔧',tr:['도구·기계를 다루고 직접 만들어 보는 일이 편해요','결과물이 눈에 보이는 실습·체험이 좋아요','말보다 행동으로 해결하는 편이에요'],
@@ -1836,13 +1880,24 @@ function holView(){
  <div id="holbody" class="rec"><h3>${H.ico} ${R.n} <span class="tag acc">${p[sel]}점</span></h3><p class="lead" style="font-size:14px">${R.h}</p>
   <h4>이런 특징이 있어요</h4>${ul(H.tr)}
   <h4>어울리는 직업 예시</h4><div class="row">${H.jobs.map(j=>`<a class="chip" href="${nv(j+' 하는 일')}" target="_blank" rel="noopener">${esc(j)}</a>`).join('')}</div>
-  <h4>관련 대학 학과 <span class="tag">누르면 대학·학과 찾기로 이동</span></h4><div class="row">${H.majors.map(m=>`<button class="chip" data-a="udept" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div>
+  <h4>관련 대학 학과 <span class="tag">학과 이름을 누르면 커리어넷 학과 설명으로 연결돼요</span></h4><div class="row">${H.majors.map(m=>holMajor(m)).join('')}</div>
   <h4>고교에서 살펴볼 분야</h4><div class="row">${H.fields.map(f=>FI[f]?`<button class="chip" data-a="findf" data-v="${f}">${esc(FI[f].n.split('(')[0])}</button>`:'').join('')}</div>
   <p><b>도움이 되는 고교 선택과목</b>: ${H.subj}</p>
   <div class="callout">${H.tip}</div>
   <div class="row"><button class="btn sm" data-a="go" data-v="subj">교과 선택·학과 안내 보기</button><button class="btn ghost sm" data-a="go" data-v="univ">대학·학과 찾기</button>${ext('https://www.career.go.kr','커리어넷에서 직업 더 알아보기')}</div>
  </div>
  <p class="mut" style="font-size:12px">직업·학과는 대표 예시예요. 흥미 유형은 한 가지만 맞는 것이 아니라 여러 유형이 섞여 있어요. 학교와 학과 이름은 대학마다 달라서 비슷한 이름도 함께 찾아보세요.</p></section>`;
+}
+
+function cnMajor(kw){
+ const l=UCN.filter(c=>c.n.includes(kw));if(!l.length)return null;
+ l.sort((a,b)=>(b.n.startsWith(kw)-a.n.startsWith(kw))||a.n.length-b.n.length);return l[0];
+}
+function holMajor(kw){
+ const c=cnMajor(kw);
+ const href=c?cnUrl(c.q):nv('커리어넷 '+kw+' 학과');
+ const name=c?c.n:kw;
+ return `<span class="mj"><a class="chip" href="${href}" target="_blank" rel="noopener" title="커리어넷에서 ${esc(name)} 보기">${esc(name)} ↗</a><button class="chip" data-a="holdept" data-v="${esc(kw)}" title="이 학과가 있는 대학과 취업률 보기">대학</button></span>`;
 }
 
 /* 네이버 에듀 선택과목 가이드 연결 (외부 사이트는 다른 사이트 안에 넣을 수 없어 새 창으로 열어요) */
@@ -2073,6 +2128,7 @@ document.addEventListener('click',e=>{
  if(a==='sgfind'){S.fm='vo';S.fk='all';S.ff='all';S.fs='all';S.fr='all';S.fe='all';S.fx='all';S.fq='성일정보고';closeModal();save();go('schools');return}
  if(a==='toGG'){closeModal();S.fm='gg';save();go('schools');return}
  if(a==='gtab'){S.gt=v;save();const r=$('#gres');if(r){r.innerHTML=genRegionList();document.querySelectorAll('[data-a=gtab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v))}else render(false);return}
+ if(a==='holdept'){S.uq=v;S.ut='univ';S.uf='all';S.ug='all';S.umin='0';S.uk='1';S.ufrom='';save();go('univ');return}
  if(a==='holt'){S.ht=v;save();render(false);return}
  if(a==='grpgo'){const m={sci:'science',for:'foreign',art:'arts'};if(m[v]){S.fm='sp';S.sp=m[v];S.sk='all'}else if(v==='gn'){if(S.fm!=='gen'&&S.fm!=='rural'&&!(S.fm==='sp'&&(S.sp==='private'||S.sp==='autonomous_public')))S.fm='gen'}else S.fm=v;save();render(false);return}
  if(a==='grpsp'){S.fm='sp';S.sp=v;S.sk='all';save();render(false);return}
@@ -2124,9 +2180,9 @@ document.addEventListener('click',e=>{
  else if(a==='ans'){migLv();S.ans[+el.dataset.i]=+v}
  else if(a==='pref')S.pref[el.dataset.k]=v;
  else if(a==='chip'){const i=S.chips.indexOf(v);if(i>=0)S.chips.splice(i,1);else if(S.chips.length<3)S.chips.push(v);else toast('관심 분야는 최대 3개까지 고를 수 있어요')}
- else if(a==='next'){if(S.step===QP+3){S.done=true;S.redo=false;S.type=null;S.step=0;save();go('result');return}S.step++;save();render(true);return}
+ else if(a==='next'){if(S.step===QP+4){S.done=true;S.redo=false;S.type=null;S.step=0;save();go('result');return}S.step++;save();render(true);return}
  else if(a==='prev'){S.step--;save();render(true);return}
- else if(a==='redo'){S.redo=true;S.step=0;S.ans={};S.lv=2;S.chips=[];S.pref={};S.done=false;S.type=null;save();go('start');return}
+ else if(a==='redo'){S.redo=true;S.step=0;S.ans={};S.lv=2;S.tx={};S.chips=[];S.pref={};S.done=false;S.type=null;save();go('start');return}
  else if(a==='pick'){S.type=v;save();go('detail');return}
  else if(a==='pickf'){const f=FI[v];S.field=v;S.type=f.meister&&rank().find(x=>x.id==='meister').sc>=rank().find(x=>x.id==='vocational').sc?'meister':'vocational';save();go('detail');return}
  else if(a==='type'||a==='rtype'){S.type=v;if(a==='type')qi=0}
@@ -2161,6 +2217,7 @@ document.addEventListener('input',e=>{
  else if(e.target.id==='memo'){S.note=e.target.value;save()}
  else if(e.target.id==='sid'){e.target.value=e.target.value.replace(/\D/g,'').slice(0,5)}
  else if(e.target.id==='rq'){S.rq=e.target.value;save();const r=$('#rres');if(r)r.innerHTML=ruralList()}
+ else if(e.target.dataset&&e.target.dataset.tx){S.tx=S.tx||{};S.tx[e.target.dataset.tx]=e.target.value;save()}
  else if(e.target.id==='nvq'){const a=$('#nvgo');if(a)a.href=nvUrl(e.target.value)}
  else if(e.target.id==='uq'){S.uq=e.target.value;save();const r=$('#ures');if(r)r.innerHTML=S.ut==='univ'?uResults():S.ut==='rate'?uRates():uDict()}
  else if(e.target.dataset&&e.target.dataset.pl!==undefined){S.plan=S.plan||{};S.plan[e.target.dataset.pl]=e.target.value;save()}
