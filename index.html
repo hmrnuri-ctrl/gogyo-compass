@@ -80,6 +80,8 @@ main{padding-block:22px 40px;display:flex;flex-direction:column;gap:18px}
 .q{display:flex;flex-direction:column;gap:8px;padding-block:12px;border-top:1px solid var(--line)}
 .q:first-of-type{border-top:0}
 .likert{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.q.nowq{background:var(--acc-soft);border-radius:12px;box-shadow:0 0 0 2px var(--acc)}
+.likert button:focus-visible,.opt:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .likert button{font-size:12.5px;padding:9px 2px}
 @media (max-width:520px){.likert{gap:4px}.likert button{font-size:11.5px;padding:8px 1px;letter-spacing:-.4px}}
 .likert button,.opt{border:1.5px solid var(--line);background:var(--sf);border-radius:10px;padding:9px 4px;font-size:13px;cursor:pointer;line-height:1.3}
@@ -452,7 +454,6 @@ const FIELDS=[
 {id:'bio',n:'화학·바이오·환경',d:'화학 공정, 바이오·제약, 환경, 섬유·재료 분야를 배워요.',maj:['화학공업과','바이오·제약과','환경과','섬유·재료과'],job:['화학·공정 기술자','바이오·제약 연구보조','환경 분석 기술자','품질관리'],cert:['위험물 관련 자격','화학분석 관련 자격','환경 관련 기능사'],tr:{I:3,R:2,C:1},meister:true,tips:['과학 실험·탐구 동아리로 화학·생명 분야 흥미를 확인하세요.','과학(화학, 생명) 개념과 수학 기초를 다지고 실험 보고서를 써 보세요.','학교별 실험실·실습 환경과 연계 기업(제약·화학), 진학 현황을 비교하세요.']}
 ];
 const FI={};FIELDS.forEach(f=>FI[f.id]=f);
-const INT=[{id:'sci',n:'수학·과학 탐구'},{id:'lang',n:'외국어·국제'},{id:'art',n:'음악·미술·무용·연극'}].concat(FIELDS.map(f=>({id:f.id,n:f.n})));
 
 const ARTS=[['음악(성악·기악·작곡)','악기·성악 실기 곡목 확인, 시창·청음 기초, 꾸준한 레슨 계획'],['미술(회화·조소·디자인)','소묘·구성 기초, 포트폴리오 정리, 학교별 실기 과제 유형 확인'],['무용(한국·현대·발레)','기본기와 유연성·체력 관리, 부상 예방, 전공 종목 확인'],['연극영화','연기·발성, 독백 준비, 영상·무대 경험과 감상 기록'],['실용음악','보컬·악기 실기, 자작곡·편곡 경험, 요강의 실기 종목 확인'],['문예창작','글쓰기 습관, 작품 모음, 독서 기록과 합평 경험'],['국악','국악기·판소리·무용 기초, 학교별 전공 개설 여부 확인'],['체육(체육고)','종목별 기록과 대회 경험, 체력 관리, 시도 체육고 요강 확인']];
 const MQ=[['뉴스에서 사회 문제를 보면','원인과 해결책을 토론하고 싶다','데이터와 원리를 분석하고 싶다'],['과제를 고른다면','인물·역사·사회를 탐구해 글쓰기','실험·측정하고 모형 만들기'],['시간이 더 편한 수업은','국어·사회·영어','수학·과학'],['더 궁금한 질문은','사람들은 왜 그런 선택을 할까?','이건 어떤 원리로 작동할까?'],['상상하는 미래 직업','법·교육·언론·경영·상담','의료·공학·IT·연구'],['프로젝트에서 맡고 싶은 역할','기획·발표·자료 조사','설계·제작·코딩·실험'],['어려운 문제를 만나면','관련 글과 사례를 읽고 맥락을 이해','수식과 그림으로 구조를 풀어 본다']];
@@ -601,8 +602,12 @@ const ls={get(k){try{const v=localStorage.getItem(k);if(v)return JSON.parse(v)}c
 const store={get(){return ls.get(KEY)},set(v){ls.set(KEY,v)}};
 const DEF={grade:null,step:0,ans:{},chips:[],pref:{},done:false,redo:false,type:null,field:null,mq:{},region:'서울',ftype:'all',ffield:'all',q:'',rg:null,checks:{},note:'',fm:'home',ff:'all',fs:'all',fr:'all',fk:'all',fe:'all',fx:'all',fq:'',sp:'science',sr:'all',user:null,draft:{},edit:null,pfc:[],last:'',delc:null,tt:'top',xi:'',xfrom:'',xt:'guide',xs:[],xk:'',plan:{},ut:'univ',uf:'all',ug:'all',ur:'all',umin:'10',us:'rate',uq:'',uk:'1',ufrom:''};
 const ukey=u=>KB+':'+u.sid+':'+u.name;
-let S=Object.assign({},DEF);
-(function(){const u=ls.get(SESS);if(u&&u.sid){KEY=ukey(u);S=Object.assign({},DEF,store.get()||{});S.user=u}})();
+const fresh=()=>JSON.parse(JSON.stringify(DEF));
+const SMEM={};
+const ss={get(k){try{const v=sessionStorage.getItem(k);if(v)return JSON.parse(v)}catch(e){}return SMEM[k]||null},set(k,v){SMEM[k]=v;try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){delete SMEM[k];try{sessionStorage.removeItem(k)}catch(e){}}};
+let S=fresh();
+ls.del(SESS);
+(function(){const u=ss.get(SESS);if(u&&u.sid){KEY=ukey(u);S=Object.assign(fresh(),store.get()||{});S.user=u}})();
 const save=()=>{if(S.user)store.set(S)};
 const ROUTES=['start','result','detail','college','top','schools','univ','subj','roadmap','portfolio'];
 const NAVT=['흥미·적성 검사','나의 결과','세부 선택·요강','특성화고→대학','상위 특성화·마이스터','학교 찾기','대학·학과','교과 선택','로드맵','포트폴리오'];
@@ -614,19 +619,19 @@ const ext=(u,t,c)=>`<a class="btn ${c||'ghost'} sm" href="${u}" target="_blank" 
 function pcts(){migLv();const s={},n={};Q.forEach((q,i)=>{const v=S.ans[i];if(v){s[q[0]]=(s[q[0]]||0)+v;n[q[0]]=(n[q[0]]||0)+1}});const o={};'RIASEC'.split('').forEach(k=>{o[k]=n[k]?Math.round((s[k]/n[k]-1)/4*100):0});const tb=textBonus();for(const k in tb)o[k]=Math.min(100,o[k]+tb[k]);return o}
 function rank(){
  const p=pcts(),c=S.chips,out=[];
- const fchips=c.filter(x=>FI[x]);
+ const fset=chipFields(),ct=chipTypes();const fchips=[...fset];
  for(const id of TORDER){
   const w=TYPES[id].w;let num=0,den=0;for(const k in w){num+=w[k]*p[k];den+=w[k]}
   let sc=num/den;const pos=[],neg=[],a=ADJ[id]||{};
   for(const k in a){const v=S.pref[k];if(v&&a[k][v]!==undefined){const d=a[k][v];sc+=d;const lab=PQ.find(x=>x.k===k).o.find(o=>o[0]===v)[1];if(d>=8)pos.push('“'+lab+'” 응답과 잘 맞아요');else if(d<=-10)neg.push('“'+lab+'” 응답과는 거리가 있어요')}}
   let bonus=0;
-  if(id==='science'&&c.includes('sci'))bonus+=8;
+  if(id==='science'&&ct.sci>0)bonus+=Math.min(14,8+4*(ct.sci-1));
   {const tt=textAnalysis().types;if(id==='science')bonus+=Math.min(8,(tt.science||0)*4);if(id==='foreign')bonus+=Math.min(8,(tt.foreign||0)*4);if(id==='arts')bonus+=Math.min(10,(tt.arts||0)*5);if(id==='meister')bonus+=Math.min(4,(tt.meister||0)*2);if(id==='vocational')bonus+=Math.min(4,(tt.vocational||0)*2)}
-  if(id==='private'&&c.includes('sci'))bonus+=2;
-  if(id==='foreign'&&c.includes('lang'))bonus+=10;
-  if(id==='arts'&&c.includes('art'))bonus+=12;
+  if(id==='private'&&ct.sci>0)bonus+=2;
+  if(id==='foreign'&&ct.lang>0)bonus+=Math.min(14,10+4*(ct.lang-1));
+  if(id==='arts'&&ct.art>0)bonus+=Math.min(16,12+3*(ct.art-1));
   if(id==='vocational')bonus+=Math.min(8,fchips.length*4);
-  if(id==='meister')fchips.forEach(x=>bonus+=FI[x].meister?4:1);
+  if(id==='meister'){let mb=0;fchips.forEach(x=>mb+=FI[x].meister?4:1);bonus+=Math.min(12,mb)}
   sc+=bonus;
   if(compAverse()){if(COMPET.includes(id))sc=Math.min(sc,36);else if(id==='autonomous_public')sc=Math.min(sc,58);else if(id==='general')sc+=14}
   else if(COMPET.includes(id)&&(S.pref.p3==='mid'||S.pref.p3==='unk'))sc=Math.min(sc,48);
@@ -638,7 +643,7 @@ function rank(){
 }
 function fieldRank(only){
  const p=pcts();
- return FIELDS.filter(f=>!only||f.meister).map(f=>{let n=0,d=0;for(const k in f.tr){n+=f.tr[k]*p[k];d+=f.tr[k]}let sc=n/d+(S.chips.includes(f.id)?25:0)+Math.min(20,(textAnalysis().fields[f.id]||[]).length*8);return{f,sc:Math.max(5,Math.min(98,Math.round(sc)))}}).sort((a,b)=>b.sc-a.sc);
+ return FIELDS.filter(f=>!only||f.meister).map(f=>{let n=0,d=0;for(const k in f.tr){n+=f.tr[k]*p[k];d+=f.tr[k]}let sc=n/d+(S.chips.includes(f.id)?25:(chipFields().has(f.id)?15:0))+Math.min(20,(textAnalysis().fields[f.id]||[]).length*8);return{f,sc:Math.max(5,Math.min(98,Math.round(sc)))}}).sort((a,b)=>b.sc-a.sc);
 }
 const curType=()=>S.type||(S.done?rank()[0].id:'general');
 function topTraits(){const p=pcts();return Object.keys(p).sort((a,b)=>p[b]-p[a])}
@@ -672,7 +677,7 @@ function vStart(){
   const T=S.tx||{};
   body=`<h2>나를 말로 표현해 봐요 <span class="tag">선택</span></h2><p class="lead">숫자로 고르는 문항 말고, 내 생각을 짧게 써 보세요. 쓴 글에서 좋아하는 활동과 바람을 찾아 결과에 반영해요. 비워 두고 넘어가도 괜찮아요.</p>`+TXP.map(q=>`<div class="field"><label for="tx-${q[0]}">${q[1]}</label><textarea class="sel" id="tx-${q[0]}" data-tx="${q[0]}" maxlength="200" rows="3" placeholder="${q[2]}">${esc(T[q[0]]||'')}</textarea></div>`).join('')+`<p class="mut" style="font-size:12px">쓴 내용은 이 기기에만 저장되고 선생님께 전송되지 않아요. 한 칸에 200자까지 쓸 수 있어요.</p>`;
  }else if(st===QP+2){
-  body=`<h2>관심 있는 분야를 골라 보세요</h2><p class="lead">최대 3개까지 고를 수 있어요. 고르지 않아도 괜찮아요.</p><div class="row">${INT.map(c=>`<button class="chip" data-a="chip" data-v="${c.id}" aria-pressed="${S.chips.includes(c.id)}">${c.n}</button>`).join('')}</div>`;
+  body=chipsView();
  }else{
   const pp=st===QP+3?PQ.slice(0,6):PQ.slice(6);
   body=`<h2>나의 상황과 바람 <span class="tag">${st-QP-2}/2</span></h2><p class="lead">학교 유형을 고를 때 중요한 조건이에요. 경쟁이 부담되는지, 어떤 분위기가 편한지도 솔직하게 알려 주세요.</p>`+pp.map(q=>`<div class="q"><p><b>${q.q}</b></p><div class="opts">${q.o.map(o=>`<button class="opt" data-a="pref" data-k="${q.k}" data-v="${o[0]}" aria-pressed="${S.pref[q.k]===o[0]}">${o[1]}</button>`).join('')}</div></div>`).join('');
@@ -1837,6 +1842,33 @@ function grpHome(){
  <div class="callout">기숙사 정보는 한국교육개발원 교육통계(2025.4.1 기준)를 반영했어요. 학교 카드의 <span class="tag grn">기숙사</span> 표시를 확인하고, 마이스터고·특성화고(${SCHV.length}교 중 ${dm}교)는 “기숙사 있는 학교” 조건으로 걸러 볼 수 있어요.</div>`;
 }
 
+/* 관심 분야 (52개, 최대 5개 선택) */
+const INTG=['수학·과학','생명·보건·의약','공학·기술','IT·AI','예술·미디어','인문·사회·언어','경영·공공','서비스·생활','농림·해양·환경','체육·안전'];
+/* [id, 이름, 묶음, 연결되는 특성화·마이스터고 분야, 유형(sci|lang|art)] — 기존 id(sci·lang·art·직업 분야 15개)는 그대로 써요 */
+const INTR=[
+ ['sci','수학·과학 탐구',0,[],'sci'],['math','수학·통계',0,[],'sci'],['phys','물리·천문·우주',0,['robot'],'sci'],['chem','화학·신소재',0,['bio'],'sci'],
+ ['gene','생명과학·유전',1,['bio'],'sci'],['med','의학·의료',1,['care'],'sci'],['pharma','약학·신약 개발',1,['bio'],'sci'],['nurse','간호·재활·치료',1,['care'],''],['care','보건·복지·돌봄',1,[],''],['vet','수의·동물 의료',1,['agri','care'],'sci'],['nutri','영양·식품과학',1,['food','bio'],''],['bio','화학·바이오·환경',1,[],''],
+ ['industry','산업기술(기계·전기·전자)',2,[],''],['mech','기계·로봇공학',2,['industry','robot'],''],['elec','전기·전자·통신',2,['industry'],''],['semi','반도체·디스플레이',2,['robot'],''],['auto','자동차',2,[],''],['construction','건축·토목',2,[],''],['energy','에너지·신재생',2,['industry','bio'],''],['robot','로봇·반도체·신산업(AI·드론)',2,[],''],['transport','해양·항공·철도(운송·정비)',2,[],''],
+ ['it','IT·소프트웨어(정보보안·게임)',3,[],''],['sw','소프트웨어·앱 개발',3,['it'],''],['ai','인공지능·데이터',3,['it','robot'],'sci'],['game','게임·가상현실',3,['it','design'],''],
+ ['art','음악·미술·무용·연극',4,[],'art'],['design','디자인·미디어',4,[],''],['music','음악·작곡',4,[],'art'],['media','영상·방송·웹툰',4,['design'],'art'],['write','글쓰기·문학·언론',4,[],'lang'],['fashion','패션·의류디자인',4,['design','beauty'],'art'],
+ ['lang','외국어·국제',5,[],'lang'],['hist','역사·철학',5,[],'lang'],['psych','심리·상담',5,['care'],''],['polsci','정치·외교·국제관계',5,['biz'],'lang'],['law','법·경찰·검찰',5,['defense','biz'],''],['edu','교육·가르치기',5,['care'],''],['welfare','사회복지·봉사',5,['care'],''],
+ ['biz','금융·회계·경영',6,[],''],['startup','창업·마케팅',6,['biz'],''],['public','공무원·행정',6,['biz','defense'],''],
+ ['food','식품·조리',7,[],''],['beauty','미용·뷰티',7,[],''],['tour','관광·항공서비스·외식',7,[],''],['pet','반려동물·동물케어',7,['agri','care'],''],['hotel','호텔·외식서비스',7,['tour','food'],''],
+ ['agri','농업·생명(농업경영)',8,[],''],['smartfarm','스마트팜·원예',8,['agri','it'],''],['env','환경·기후·생태',8,['bio'],''],['ocean','해양·수산',8,['agri','transport'],''],
+ ['defense','부사관·소방·안전',9,[],''],['sports','체육·스포츠·건강',9,['care','defense'],'']];
+const INT=INTR.map(r=>({id:r[0],n:r[1],g:r[2],f:r[3],t:r[4]}));
+const INTM={};INT.forEach(x=>INTM[x.id]=x);
+const MAXCHIP=5;
+function chipFields(){const set=new Set();S.chips.forEach(id=>{if(FI[id])set.add(id);const x=INTM[id];if(x)(x.f||[]).forEach(f=>set.add(f))});return set}
+function chipTypes(){const t={sci:0,lang:0,art:0};S.chips.forEach(id=>{const x=INTM[id];if(x&&x.t)t[x.t]++});return t}
+function chipsView(){
+ const sel=S.chips.filter(id=>INTM[id]);
+ return `<h2>관심 있는 분야를 골라 보세요 <span class="tag acc">${sel.length}/${MAXCHIP}</span></h2>
+ <p class="lead">최대 ${MAXCHIP}개까지 고를 수 있어요. 마음이 바뀌면 다시 눌러서 뺄 수 있어요. 고르지 않아도 괜찮아요.</p>
+ <div class="callout" id="chipsel"><b>내가 고른 분야</b> ${sel.length?sel.map(id=>`<button class="chip" data-a="chip" data-v="${id}" aria-pressed="true" title="누르면 빼요">${esc(INTM[id].n)} ✕</button>`).join(' '):'<span class="mut">아직 고르지 않았어요</span>'}</div>
+ ${INTG.map((g,gi)=>`<h4 style="margin-top:6px">${g}</h4><div class="row">${INT.filter(c=>c.g===gi).map(c=>`<button class="chip" data-a="chip" data-v="${c.id}" aria-pressed="${S.chips.includes(c.id)}">${esc(c.n)}</button>`).join('')}</div>`).join('')}`;
+}
+
 /* 서술형 문항: 학생이 쓴 글에서 흥미 키워드를 찾아 성향 점수에 반영해요 (간단한 낱말 찾기 방식) */
 const TXP=[
  ['a','요즘 가장 즐겁게 하는 활동이나 좋아하는 것은 무엇인가요?','예: 쉬는 시간에 코딩으로 게임을 만들어 보는 게 제일 재미있어요.'],
@@ -2009,10 +2041,11 @@ function doLogin(){
  const bad=m=>{er.textContent=m;er.hidden=false};
  if(!/^[1-9]\d{3,4}$/.test(sid))return bad('학번은 숫자 4~5자리로 써 주세요. (맨 앞자리는 0이 아닌 숫자)');
  if(!/^[가-힣]{2,5}$/.test(name))return bad('이름은 한글 2~5자로 써 주세요. (띄어쓰기, 영어, 숫자는 쓸 수 없어요)');
- const u={sid,name};ls.set(SESS,u);KEY=ukey(u);S=Object.assign({},DEF,store.get()||{});S.user=u;save();
+ const u={sid,name};ss.set(SESS,u);KEY=ukey(u);S=Object.assign(fresh(),store.get()||{});S.user=u;save();
  if(location.hash==='#start'||!location.hash)render(true);else location.hash='start';
 }
-function doLogout(){ls.del(SESS);S=Object.assign({},DEF);KEY=KB;PFSTAT='';if(location.hash==='#start')render(true);else location.hash='start'}
+function logoutAsk(){modal(`<h2>나가기</h2><p class="lead">같은 컴퓨터를 다른 친구도 쓴다면 <b>내 검사 결과를 이 기기에서 지우고</b> 나가는 것이 안전해요. 포트폴리오 기록은 선생님 시트에 따로 저장되어 있어서 지워지지 않고, 다시 들어오면 볼 수 있어요.</p><p class="mut" style="font-size:13px">검사 결과와 선택 내용은 이 기기에만 저장돼요. 지우고 나가면 다음에 다시 검사해야 해요.</p><div class="row"><button class="btn" data-a="logout2" data-v="wipe">이 기기에서 지우고 나가기 (공용 컴퓨터 추천)</button><button class="btn ghost" data-a="logout2" data-v="keep">기록 남기고 나가기</button></div>`)}
+function doLogout(wipe){if(wipe&&S.user)ls.del(KEY);ss.del(SESS);S=fresh();KEY=KB;PFSTAT='';if(location.hash==='#start')render(true);else location.hash='start'}
 function hdUser(){const w=$('#who');if(!w)return;w.innerHTML=S.user?`<span class="who">${S.user.sid} ${esc(S.user.name)}</span><button class="btn ghost sm" data-a="logout">나가기</button>`:''}
 
 /* 포트폴리오 */
@@ -2168,11 +2201,17 @@ function render(top){
 window.addEventListener('hashchange',()=>render(true));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
+function hiQ(q){document.querySelectorAll('.q.nowq').forEach(e=>e.classList.remove('nowq'));if(q)q.classList.add('nowq')}
+function advTo(btn){if(!btn)return;hiQ(btn.closest('.q'));btn.scrollIntoView({block:'center',behavior:'smooth'});try{btn.focus({preventScroll:true})}catch(e){}}
+function advNext(){hiQ(null);const nx=document.querySelector('[data-a="next"]');if(nx){nx.scrollIntoView({block:'center',behavior:'smooth'});if(!nx.disabled)try{nx.focus({preventScroll:true})}catch(e){}}}
+function advAns(i){const n=document.querySelector('[data-a="ans"][data-i="'+(i+1)+'"]');if(n)advTo(n);else advNext()}
+function advPref(k){const cur=document.querySelector('[data-a="pref"][data-k="'+k+'"]');const q=cur&&cur.closest('.q');const nq=q&&q.nextElementSibling;const n=nq&&nq.querySelector('[data-a="pref"]');if(n)advTo(n);else advNext()}
 document.addEventListener('click',e=>{
  const el=e.target.closest('[data-a]');if(!el||el.tagName==='SELECT'||el.tagName==='INPUT'&&el.type!=='checkbox')return;
  const a=el.dataset.a,v=el.dataset.v;
  if(a==='go'){closeModal();go(v);return}
- if(a==='logout'){doLogout();return}
+ if(a==='logout'){logoutAsk();return}
+ if(a==='logout2'){closeModal();doLogout(v==='wipe');return}
  if(a==='yi'){yiModal();return}
  if(a==='toptab'){S.tt=v;save();render(false);return}
  if(a==='topsch'){vModal(+v);return}
@@ -2233,9 +2272,9 @@ document.addEventListener('click',e=>{
  if(a==='adm-csv'){admCsv();return}
  if(a==='close'){closeModal();return}
  if(a==='grade'){S.grade=+v;S.rg=+v}
- else if(a==='ans'){migLv();S.ans[+el.dataset.i]=+v}
- else if(a==='pref')S.pref[el.dataset.k]=v;
- else if(a==='chip'){const i=S.chips.indexOf(v);if(i>=0)S.chips.splice(i,1);else if(S.chips.length<3)S.chips.push(v);else toast('관심 분야는 최대 3개까지 고를 수 있어요')}
+ else if(a==='ans'){migLv();const i=+el.dataset.i;S.ans[i]=+v;save();render(false);advAns(i);return}
+ else if(a==='pref'){const k=el.dataset.k;S.pref[k]=v;save();render(false);advPref(k);return}
+ else if(a==='chip'){const i=S.chips.indexOf(v);if(i>=0)S.chips.splice(i,1);else if(S.chips.length<MAXCHIP)S.chips.push(v);else toast('관심 분야는 최대 '+MAXCHIP+'개까지 고를 수 있어요')}
  else if(a==='next'){if(S.step===QP+4){S.done=true;S.redo=false;S.type=null;S.step=0;save();go('result');return}S.step++;save();render(true);return}
  else if(a==='prev'){S.step--;save();render(true);return}
  else if(a==='redo'){S.redo=true;S.step=0;S.ans={};S.lv=2;S.tx={};S.chips=[];S.pref={};S.done=false;S.type=null;save();go('start');return}
